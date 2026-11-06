@@ -1,0 +1,1820 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NBA 生涯模拟器 v5</title>
+<style>
+:root{--bg:#0a0e14;--panel:#131a26;--panel2:#1a2231;--line:#253044;--txt:#e7edf7;
+--dim:#8b9bb4;--accent:#ff6b2c;--accent2:#ffb020;--green:#34d399;--red:#f87171;
+--blue:#60a5fa;--purple:#c084fc}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:radial-gradient(1100px 600px at 15% -10%,#1b2540 0%,var(--bg) 55%) fixed,var(--bg);
+color:var(--txt);font-family:system-ui,-apple-system,"Segoe UI","Microsoft YaHei",sans-serif;
+min-height:100vh;font-size:13.5px}
+.hidden{display:none!important}
+button{font-family:inherit;cursor:pointer;border:none;outline:none}
+input,textarea,select{font-family:inherit}
+.btn{padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;background:var(--panel2);
+color:var(--txt);border:1px solid var(--line);transition:.15s}
+.btn:hover{background:#22304a;border-color:#33425e}
+.btn.primary{background:linear-gradient(135deg,#ff6b2c,#ff9a3c);color:#120a04;border:none;
+box-shadow:0 6px 18px rgba(255,107,44,.28)}
+.btn.primary:hover{filter:brightness(1.08)}
+.btn.ghost{background:transparent}
+.btn.sm{padding:6px 11px;font-size:11.5px}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px;margin-bottom:13px}
+.card-title{font-size:11px;letter-spacing:.14em;color:var(--dim);text-transform:uppercase;
+margin-bottom:11px;font-weight:700}
+
+#create{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px 14px}
+.create-card{width:100%;max-width:700px;background:rgba(19,26,38,.9);border:1px solid var(--line);
+border-radius:20px;padding:30px}
+.brand{font-size:12px;letter-spacing:.34em;color:var(--accent);font-weight:800;margin-bottom:7px}
+.create-card h1{font-size:29px;margin-bottom:5px}
+.sub{color:var(--dim);margin-bottom:18px;font-size:13px}
+label{display:block;font-size:11px;color:var(--dim);letter-spacing:.08em;margin:14px 0 7px;font-weight:700}
+#c-name{width:100%;background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+padding:11px 13px;color:var(--txt);font-size:15px}
+#c-desc{width:100%;height:76px;background:var(--panel2);border:1px solid var(--line);border-radius:10px;
+padding:11px 13px;color:var(--txt);font-size:13.5px;resize:none;line-height:1.6}
+#c-name:focus,#c-desc:focus{border-color:var(--accent);outline:none}
+.chip-row{display:flex;flex-wrap:wrap;gap:7px}
+.chip{padding:8px 15px;border-radius:999px;background:var(--panel2);border:1px solid var(--line);
+color:var(--dim);font-weight:600;font-size:12.5px}
+.chip.on{background:rgba(255,107,44,.16);border-color:var(--accent);color:var(--accent)}
+.preview{margin-top:13px;padding:13px 15px;background:var(--panel2);border-radius:11px;
+border:1px dashed var(--line);font-size:12.5px;line-height:1.7}
+.preview b{color:var(--accent2)}
+.pb{margin-top:8px}
+.pb .row{display:flex;align-items:center;gap:8px;font-size:11.5px;margin-bottom:4px}
+.pb .row span{width:64px;color:var(--dim)}
+.pb .bar{flex:1;height:5px;background:#0d1420;border-radius:99px;overflow:hidden}
+.pb .bar i{display:block;height:100%;border-radius:99px;background:var(--accent)}
+.row-end{display:flex;gap:9px;justify-content:flex-end;margin-top:18px}
+
+.phys-row>div{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.phys-row span{width:42px;color:var(--dim);font-size:12px;flex:none}
+.phys-row input[type=range]{flex:1;accent-color:var(--accent);height:4px}
+.phys-row b{width:66px;text-align:right;font-size:12px;font-variant-numeric:tabular-nums}
+.combine{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:11px}
+.combine div{background:var(--panel2);border-radius:8px;padding:8px 4px;text-align:center}
+.combine b{display:block;font-size:14px;color:var(--accent2);font-variant-numeric:tabular-nums}
+.combine small{color:var(--dim);font-size:9.5px}
+@media(max-width:600px){.combine{grid-template-columns:repeat(3,1fr)}}
+
+.topbar{display:flex;align-items:center;gap:16px;padding:11px 18px;background:rgba(13,18,27,.94);
+border-bottom:1px solid var(--line);position:sticky;top:0;z-index:20;backdrop-filter:blur(10px)}
+.avatar{width:38px;height:38px;border-radius:10px;background:linear-gradient(135deg,#ff6b2c,#ffb020);
+display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:800;color:#1a0e04}
+.tb-left{display:flex;align-items:center;gap:10px;min-width:180px}
+.tb-name{font-size:14px;font-weight:700}
+.tb-team{font-size:10.5px;color:var(--dim)}
+.tb-mid{display:flex;gap:16px;flex:1;justify-content:center;flex-wrap:wrap}
+.tb-stat{text-align:center}
+.tb-stat b{display:block;font-size:15px;font-variant-numeric:tabular-nums}
+.tb-stat small{font-size:9px;color:var(--dim)}
+.tb-right{display:flex;gap:7px}
+
+nav.tabs{display:flex;gap:4px;padding:9px 18px;background:rgba(13,18,27,.7);
+border-bottom:1px solid var(--line);position:sticky;top:61px;z-index:19;overflow-x:auto}
+.tab{padding:7px 15px;border-radius:8px;background:transparent;color:var(--dim);
+font-size:12.5px;font-weight:600;white-space:nowrap}
+.tab.on{background:var(--panel2);color:var(--accent)}
+
+.wrap{max-width:1080px;margin:0 auto;padding:15px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:13px}
+@media(max-width:860px){.grid2{grid-template-columns:1fr}}
+.attr{display:flex;align-items:center;gap:7px;font-size:11.5px;margin-bottom:5px}
+.attr .an{width:52px;color:var(--dim);flex:none}
+.attr .bar{flex:1;height:5px;background:#0d1420;border-radius:99px;overflow:hidden}
+.attr .bar i{display:block;height:100%;border-radius:99px;transition:width .35s}
+.attr b{width:34px;text-align:right;font-variant-numeric:tabular-nums;font-size:11.5px}
+.group-title{font-size:10.5px;color:var(--accent);letter-spacing:.12em;margin:11px 0 7px;font-weight:700}
+.group-title:first-child{margin-top:0}
+
+.status-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:8px}
+.status-row span{color:var(--dim)}
+.status-row b{font-variant-numeric:tabular-nums}
+.stat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.stat-grid div{background:var(--panel2);border-radius:8px;padding:9px 4px;text-align:center}
+.stat-grid b{display:block;font-size:16px;font-variant-numeric:tabular-nums}
+.stat-grid small{color:var(--dim);font-size:9.5px}
+
+.plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:8px}
+.plan{padding:10px 11px;border-radius:9px;background:var(--panel2);border:1px solid var(--line);
+text-align:left;position:relative;transition:.12s}
+.plan:hover:not(:disabled){border-color:var(--accent);background:#22304a}
+.plan:disabled{opacity:.35;cursor:not-allowed}
+.plan b{display:block;font-size:12px;margin-bottom:2px}
+.plan small{color:var(--dim);font-size:10px;line-height:1.4;display:block}
+.plan.on{border-color:var(--accent);background:rgba(255,107,44,.13)}
+.plan .tick{position:absolute;top:6px;right:7px;color:var(--accent);font-weight:800;font-size:11px}
+
+.npc{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--panel2);
+border-radius:10px;margin-bottom:7px}
+.npc .ico{width:32px;height:32px;border-radius:9px;background:#22304a;display:flex;align-items:center;
+justify-content:center;font-size:14px;flex:none}
+.npc .info{flex:1;min-width:0}
+.npc .info b{font-size:12.5px;display:block}
+.npc .info small{color:var(--dim);font-size:10.5px}
+.meter{width:90px;flex:none}
+.meter .row{display:flex;justify-content:space-between;font-size:9.5px;color:var(--dim);margin-bottom:2px}
+.meter .bar{height:4px;background:#0d1420;border-radius:99px;overflow:hidden;margin-bottom:3px}
+.meter .bar i{display:block;height:100%;border-radius:99px}
+
+.log{max-height:340px;overflow-y:auto;font-size:12px;line-height:1.75}
+.log-item{display:flex;gap:8px;padding:3px 0;border-bottom:1px solid rgba(37,48,68,.45)}
+.log-item .lt{color:#5b6b84;font-size:10.5px;flex:none;padding-top:2px}
+.log-item.gold .lx{color:var(--accent2)}
+.log-item.green .lx{color:var(--green)}
+.log-item.red .lx{color:var(--red)}
+.log-item.blue .lx{color:var(--blue)}
+.log-item.love .lx{color:var(--purple)}
+
+#modal{position:fixed;inset:0;background:rgba(4,7,12,.82);display:flex;align-items:center;
+justify-content:center;padding:18px;z-index:100;backdrop-filter:blur(4px)}
+.modal-card{width:100%;max-width:560px;max-height:88vh;overflow-y:auto;background:var(--panel);
+border:1px solid var(--line);border-radius:18px;padding:23px;box-shadow:0 24px 70px rgba(0,0,0,.6);
+animation:pop .2s ease}
+@keyframes pop{from{transform:scale(.95);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-card h3{font-size:18px;margin-bottom:12px;color:var(--accent2)}
+.modal-card p{color:#b6c3d6;line-height:1.7;font-size:13px;margin-bottom:13px}
+.modal-opts{display:flex;flex-direction:column;gap:8px;margin-top:14px}
+.modal-opts .btn{text-align:left;padding:11px 14px;line-height:1.5}
+.game-row{display:flex;align-items:center;gap:11px;padding:9px 11px;background:var(--panel2);
+border-radius:9px;margin-bottom:6px}
+.game-row .vs{flex:1;min-width:0}
+.game-row .vs b{font-size:12px}
+.game-row .ls{display:flex;gap:8px;flex-wrap:wrap;font-size:10.5px;color:var(--dim);margin-top:2px}
+.game-row .ls b{color:var(--txt)}
+.game-row .score{font-size:14px;font-weight:800;font-variant-numeric:tabular-nums}
+.win{color:var(--green)} .loss{color:var(--red)}
+.tag{display:inline-block;padding:2px 7px;border-radius:6px;font-size:10.5px;background:var(--panel2);
+border:1px solid var(--line);margin:0 4px 4px 0}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:left;color:var(--dim);font-weight:600;padding:5px 6px;font-size:10.5px}
+td{padding:6px;border-top:1px solid var(--line);font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+
+<div id="create">
+  <div class="create-card">
+    <div class="brand">NBA · CAREER SIM · V5</div>
+    <h1>篮球生涯模拟器</h1>
+    <p class="sub">从大学出发，写下你的打法，走向选秀。</p>
+
+    <label>球员姓名</label>
+    <input id="c-name" maxlength="12" value="林风">
+
+    <label>用一段话描述你的打法</label>
+    <textarea id="c-desc" placeholder="例：我是个两米出头的锋线，主要靠三分和空切得分，能换防一到四号位，传球视野不错，但不太喜欢持球单打。"></textarea>
+
+    <label>场上位置</label>
+    <div id="c-pos" class="chip-row"></div>
+
+    <label>身体参数</label>
+    <div class="phys-row">
+      <div><span>身高</span><input type="range" id="c-height" min="175" max="225" step="1" oninput="updatePhys()"><b id="v-height">—</b></div>
+      <div><span>体重</span><input type="range" id="c-weight" min="70" max="140" step="1" oninput="updatePhys()"><b id="v-weight">—</b></div>
+      <div><span>臂展</span><input type="range" id="c-wingspan" min="180" max="250" step="1" oninput="updatePhys()"><b id="v-wing">—</b></div>
+    </div>
+    <div class="combine" id="c-combine"></div>
+
+    <label>开局天赋（抽 3 选 1）</label>
+    <div id="c-talent" class="chip-row"></div>
+    <div style="margin-top:8px"><button class="btn ghost sm" onclick="rollTalents()">🎲 抽取天赋</button></div>
+
+    <label>时代模式</label>
+    <div id="c-mode" class="chip-row"></div>
+
+    <div class="preview" id="c-preview">写下打法后点「解析」。</div>
+
+    <div class="row-end">
+      <button class="btn ghost" onclick="parseDesc()">🔍 解析打法</button>
+      <button class="btn primary" onclick="startCareer()">开始大学生涯 →</button>
+    </div>
+  </div>
+</div>
+
+<div id="game" class="hidden">
+  <header class="topbar">
+    <div class="tb-left">
+      <div class="avatar" id="g-avatar">林</div>
+      <div>
+        <div class="tb-name" id="g-name">—</div>
+        <div class="tb-team" id="g-team">—</div>
+      </div>
+    </div>
+    <div class="tb-mid">
+      <div class="tb-stat"><b id="g-block">1</b><small>阶段</small></div>
+      <div class="tb-stat"><b id="g-age">18</b><small>年龄</small></div>
+      <div class="tb-stat"><b id="g-ovr">60</b><small>综合</small></div>
+      <div class="tb-stat"><b id="g-record">0-0</b><small>战绩</small></div>
+      <div class="tb-stat"><b id="g-salary">—</b><small>年薪</small></div>
+    </div>
+    <div class="tb-right">
+      <button class="btn ghost sm" onclick="saveGame()">💾</button>
+      <button class="btn ghost sm" onclick="restart()">↺</button>
+    </div>
+  </header>
+
+  <nav class="tabs" id="tabs"></nav>
+  <div class="wrap" id="view"></div>
+</div>
+
+<div id="modal" class="hidden">
+  <div class="modal-card">
+    <h3 id="m-title"></h3>
+    <div id="m-body"></div>
+    <div class="modal-opts" id="m-opts"></div>
+  </div>
+</div>
+
+<script>
+/* =========================================================
+   工具
+   ========================================================= */
+const rnd=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const rand=(a,b)=>a+Math.random()*(b-a);
+const pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const fmt=n=>n.toLocaleString('zh-CN');
+const f1=n=>(Math.round(n*10)/10).toFixed(1);
+
+function overall(p){
+  const a=p.attrs;
+  const g=k=>a[k].v;
+  const tech=(g('midrange')+g('three')+g('freethrow')+g('drive')+g('passing')+g('handle')+g('rebound')+g('defense')+g('bbiq'))/9;
+  const phys=(g('speed')+g('strength')+g('jump')+g('stamina')+g('injuryResist'))/5;
+  const mind=(g('competitive')+g('leadership')+g('composure')+g('focus')+g('discipline'))/5;
+  return Math.round(tech*0.55+phys*0.30+mind*0.15);
+}
+
+/* =========================================================
+   属性
+   ========================================================= */
+const GROUPS=[
+  {n:'身体',keys:['speed','strength','jump','stamina','injuryResist']},
+  {n:'技术',keys:['midrange','three','freethrow','drive','passing','handle','rebound','defense','bbiq']},
+  {n:'精神',keys:['competitive','leadership','composure','focus','discipline']}
+];
+const META={
+  speed:{n:'速度'},strength:{n:'力量'},jump:{n:'弹跳'},stamina:{n:'耐力'},injuryResist:{n:'抗伤病'},
+  midrange:{n:'投篮'},three:{n:'三分'},freethrow:{n:'罚球'},drive:{n:'突破'},passing:{n:'传球'},
+  handle:{n:'控球'},rebound:{n:'篮板'},defense:{n:'防守'},bbiq:{n:'篮球智商'},
+  competitive:{n:'好胜心'},leadership:{n:'领导力'},composure:{n:'抗压'},focus:{n:'专注'},discipline:{n:'自律'}
+};
+const ALLKEYS=Object.keys(META);
+const POSITIONS=['PG','SG','SF','PF','C'];
+const POSW={PG:{reb:.42,ast:1.0},SG:{reb:.50,ast:.70},SF:{reb:.74,ast:.64},
+  PF:{reb:.98,ast:.45},C:{reb:1.18,ast:.34}};
+const POSBONUS={PG:{passing:8,bbiq:4,rebound:-6},SG:{midrange:5,jump:3,rebound:-4},
+  SF:{rebound:2,defense:3,strength:4},PF:{rebound:7,defense:4,passing:-5,strength:5},
+  C:{rebound:10,defense:7,passing:-8,speed:-6}};
+
+/* 各位置的标准身体参数（2024-25 大致水平） */
+const POS_PHYS={
+  PG:{h:188,w:84,ws:196},
+  SG:{h:196,w:92,ws:205},
+  SF:{h:201,w:100,ws:211},
+  PF:{h:206,w:108,ws:218},
+  C:{h:213,w:118,ws:226}
+};
+
+/* 体测推导：身高/体重/臂展 + 对应属性 */
+function calcCombine(h,w,ws,attrs,dw){
+  const jump=attrs?attrs.jump.v:62;
+  const speed=attrs?attrs.speed.v:62;
+  const strength=attrs?attrs.strength.v:62;
+  const jw=dw&&dw.jump?dw.jump:0;
+  const sw=dw&&dw.speed?dw.speed:0;
+  const stw=dw&&dw.strength?dw.strength:0;
+  return {
+    reach: Math.round(h*1.28+(ws-h)*0.35),
+    vert: Math.round(56+(jump-50)*0.9+jw*3),
+    sprint: +(3.64-(speed-50)*0.0085-sw*0.02).toFixed(2),
+    agility: +(12.8-(speed-50)*0.024-(strength-50)*0.004-sw*0.03).toFixed(1),
+    bench: Math.max(0,Math.round((strength-38)*0.42+stw*2))
+  };
+}
+
+/* 身体参数对属性的修正 */
+function applyPhys(attrs,height,weight,wingspan,pos){
+  const d=POS_PHYS[pos];
+  const hD=(height-d.h)/8;
+  const wD=(weight-d.w)/10;
+  const wsD=(wingspan-d.ws)/8;
+  const adj=(k,v)=>attrs[k].v=clamp(attrs[k].v+Math.round(v),30,95);
+  adj('rebound', hD*1.6+wsD*1.3);
+  adj('defense', hD*0.9+wsD*1.4);
+  adj('jump', -wD*1.2);
+  adj('speed', -wD*1.6-hD*0.9);
+  adj('strength', wD*2.0);
+}
+
+/* =========================================================
+   12 个真实球员模板
+   ========================================================= */
+const TEMPLATES=[
+  {id:'pg_general',n:'组织型控卫',refs:['Jason Kidd（1994-2013）','Rajon Rondo（2006-2024）'],
+   profile:{passing:92,handle:88,bbiq:92,defense:80,midrange:52,three:48,speed:82,rebound:62},
+   ceil:'全明星首发控卫，场均 15 分 10 助攻，最佳阵容级别',floor:'稳定轮换，场均 8 分 6 助攻'},
+  {id:'sg_gunner',n:'得分型后卫',refs:['Stephen Curry（2009- ）','Damian Lillard（2012- ）'],
+   profile:{three:95,midrange:88,handle:88,passing:78,drive:80,defense:55,speed:80},
+   ceil:'MVP 级射手，场均 30 分，多次总冠军',floor:'精英射手/第六人，场均 15 分'},
+  {id:'wing_two',n:'攻防一体锋线',refs:['Kawhi Leonard（2011- ）','Paul George（2010- ）'],
+   profile:{defense:92,midrange:85,three:80,strength:82,drive:78,handle:72,bbiq:82},
+   ceil:'FMVP 级双向巨星，场均 25 分+最佳防守阵容',floor:'高质量双向先发，场均 14 分'},
+  {id:'big_hub',n:'内线轴心',refs:['Nikola Jokić（2015- ）','Domantas Sabonis（2016- ）'],
+   profile:{rebound:90,passing:85,bbiq:95,strength:82,midrange:78,three:62,defense:65,speed:58},
+   ceil:'三届 MVP 级中锋，场均 26 分 12 板 9 助',floor:'策应型先发内线，场均 12 分 9 板'},
+  {id:'big_athletic',n:'运动型内线',refs:['Giannis Antetokounmpo（2013- ）','Dwight Howard（2004-2022）'],
+   profile:{jump:94,strength:92,rebound:92,defense:88,speed:78,drive:82,midrange:52,three:40},
+   ceil:'MVP + DPOY 级怪兽，场均 30 分 12 板',floor:'吃饼型首发内线，场均 12 分 10 板'},
+  {id:'three_d',n:'3D 侧翼',refs:['Danny Green（2009-2023）','P.J. Tucker（2006- ）'],
+   profile:{three:84,defense:86,strength:76,speed:72,handle:55,passing:58,midrange:60},
+   ceil:'冠军球队首发 3D，最佳防守阵容',floor:'可靠轮换，场均 7 分 4 板'},
+  {id:'iso_scorer',n:'单打得分手',refs:['Carmelo Anthony（2003-2023）','Kevin Durant（2007- ）'],
+   profile:{midrange:95,drive:88,three:82,strength:78,freethrow:88,handle:80,passing:58,composure:90},
+   ceil:'得分王级巨星，场均 28 分',floor:'高产量得分手，场均 16 分但防守被针对'},
+  {id:'traditional_c',n:'传统中锋',refs:['Shaquille O\'Neal（1992-2011）','Rudy Gobert（2013- ）'],
+   profile:{strength:95,rebound:92,defense:90,jump:72,midrange:45,three:25,passing:50,speed:52},
+   ceil:'DPOY 级护框核心，场均 18 分 13 板 3 帽',floor:'蓝领首发中锋，场均 9 分 10 板'},
+  {id:'allround_wing',n:'全能战士',refs:['LeBron James（2003- ）','Scottie Pippen（1987-2004）'],
+   profile:{speed:86,strength:86,passing:86,bbiq:88,drive:86,defense:82,midrange:76,three:72},
+   ceil:'历史级全能巨星，场均 27 分 8 板 8 助',floor:'全能型先发，场均 14 分 6 板 5 助'},
+  {id:'slash_pg',n:'突破型后卫',refs:['Russell Westbrook（2008- ）','Derrick Rose（2008- ）'],
+   profile:{speed:94,drive:94,jump:88,strength:76,passing:80,three:58,midrange:62,defense:65},
+   ceil:'MVP 级冲击型后卫，场均 27 分',floor:'快攻型轮换后卫，场均 12 分'},
+  {id:'post_scorer',n:'低位重炮',refs:['Zach Randolph（2001-2019）','Al Jefferson（2004-2018）'],
+   profile:{strength:90,rebound:86,midrange:76,drive:72,defense:62,jump:60,three:35,speed:48},
+   ceil:'低位大杀器，场均 20 分 10 板',floor:'替补低位得分手，场均 10 分 6 板'},
+  {id:'stretch_big',n:'空间型内线',refs:['Dirk Nowitzki（1998-2019）','Kristaps Porziņģis（2015- ）'],
+   profile:{three:86,midrange:90,rebound:78,defense:72,strength:70,jump:76,passing:62,speed:56},
+   ceil:'MVP 级空间内线，场均 24 分 8 板',floor:'能拉开空间的首发内线，场均 12 分 6 板'}
+];
+
+/* =========================================================
+   关键词解析
+   ========================================================= */
+const KEYWORDS={
+  three:{three:1},三分:{three:1},远投:{three:1},射手:{three:1.2},外线:{three:.8},
+  中投:{midrange:1},中距离:{midrange:1},投篮:{midrange:.8},得分:{midrange:.6},跳投:{midrange:1},
+  突破:{drive:1},突破手:{drive:1.2},冲击篮下:{drive:1},上篮:{drive:.8},
+  传球:{passing:1},组织:{passing:1},助攻:{passing:.9},控场:{passing:.8},
+  篮板:{rebound:1},卡位:{rebound:.8},内线:{rebound:.7},护框:{defense:1.2},
+  防守:{defense:1},锁防:{defense:1.2},盖帽:{defense:.8},抢断:{defense:.8},换防:{defense:.9,speed:.5},
+  速度:{speed:1},快攻:{speed:.9},爆发:{speed:.8},
+  力量:{strength:1},对抗:{strength:.8},背身:{strength:.7},低位:{strength:.7},
+  弹跳:{jump:1},扣篮:{jump:.9},运动能力:{jump:.8},运动型:{jump:1,speed:.8,strength:.6},
+  冲击篮筐:{drive:1},冲击篮下:{drive:1},
+  耐力:{stamina:.8},体能:{stamina:.8},
+  控球:{handle:1},运球:{handle:1},
+  智商:{bbiq:1},战术:{bbiq:.8},阅读:{bbiq:.8},
+  关键球:{composure:1},大心脏:{composure:1},领导:{leadership:1},队长:{leadership:1},
+  全能:{speed:.35,strength:.35,defense:.35,passing:.35,midrange:.35,three:.35},
+  全面:{speed:.35,strength:.35,defense:.35,passing:.35,midrange:.35,three:.35},
+  持球:{handle:.7},单打:{midrange:.6,drive:.6},空切:{drive:.6},策应:{passing:.8,bbiq:.6},
+  蓝领:{defense:.8,rebound:.8},空间型:{three:1.1},接球投:{three:.9},无球:{three:.5,drive:.4}
+};
+const NEG_RE=/不擅长|不太擅长|一般|较差|很差|不喜欢|不太会|不怎么会|弱|不行|糟糕/;
+
+function parseKeywords(text){
+  const w={};ALLKEYS.forEach(k=>w[k]=0);
+  Object.keys(KEYWORDS).forEach(kw=>{
+    let idx=text.indexOf(kw);
+    while(idx>=0){
+      const ctx=text.slice(Math.max(0,idx-7),idx+kw.length+7);
+      const mult=NEG_RE.test(ctx)?0.15:1;
+      const map=KEYWORDS[kw];
+      Object.keys(map).forEach(k=>{w[k]=(w[k]||0)+map[k]*mult;});
+      idx=text.indexOf(kw,idx+kw.length);
+    }
+  });
+  return w;
+}
+
+const TPL_POS={
+  pg_general:['PG'],sg_gunner:['PG','SG'],wing_two:['SG','SF'],
+  big_hub:['C','PF'],big_athletic:['SF','PF','C'],three_d:['SG','SF','PF'],
+  iso_scorer:['SG','SF'],traditional_c:['C'],allround_wing:['SF','PF'],
+  slash_pg:['PG','SG'],post_scorer:['PF','C'],stretch_big:['PF','C']
+};
+
+function matchTemplate(attrs,pos){
+  // 用玩家整体均值做基准，看模板招牌属性(top3)上玩家是否真的突出
+  const vals=ALLKEYS.map(k=>attrs[k].v);
+  const mean=vals.reduce((a,b)=>a+b,0)/vals.length;
+  let best=TEMPLATES[0],bestScore=-999;
+  TEMPLATES.forEach(t=>{
+    const sig=Object.keys(t.profile)
+      .sort((a,b)=>t.profile[b]-t.profile[a]).slice(0,3);
+    let s=sig.reduce((acc,k)=>acc+attrs[k].v,0)/sig.length;
+    s-=mean;                                  // 相对强度
+    const ok=TPL_POS[t.id]||[];
+    if(pos&&ok.length&&!ok.includes(pos))s-=15;
+    if(s>bestScore){bestScore=s;best=t;}
+  });
+  return {tpl:best,dist:Math.round(bestScore)};
+}
+
+function buildFromDesc(desc,pos){
+  const w=parseKeywords(desc);
+  if(!Object.keys(w).some(k=>w[k]>0))ALLKEYS.forEach(k=>w[k]=0.3);
+  const bonus=POSBONUS[pos]||{};
+  const attrs={};
+  const maxW=Math.max(1,...Object.values(w));
+  ALLKEYS.forEach(k=>{
+    const rel=(w[k]||0)/maxW;
+    let v=58+rel*26+(bonus[k]||0)*0.9+rnd(-4,4);
+    v=clamp(Math.round(v),46,88);
+    attrs[k]={v,pot:clamp(v+rnd(10,18),58,99)};
+  });
+  return {attrs,w,...matchTemplate(attrs,pos)};
+}
+
+/* =========================================================
+   球队 / 教练 / 球员（2024-25）
+   ========================================================= */
+const TEAMS=[
+  {n:'凯尔特人',a:'BOS',s:92,c:'Joe Mazzulla',p:['Jayson Tatum','Jaylen Brown','Derrick White']},
+  {n:'骑士',a:'CLE',s:84,c:'Kenny Atkinson',p:['Donovan Mitchell','Darius Garland','Evan Mobley']},
+  {n:'尼克斯',a:'NYK',s:82,c:'Tom Thibodeau',p:['Jalen Brunson','Karl-Anthony Towns','OG Anunoby']},
+  {n:'雄鹿',a:'MIL',s:80,c:'Doc Rivers',p:['Giannis Antetokounmpo','Damian Lillard','Brook Lopez']},
+  {n:'步行者',a:'IND',s:79,c:'Rick Carlisle',p:['Tyrese Haliburton','Pascal Siakam','Myles Turner']},
+  {n:'魔术',a:'ORL',s:77,c:'Jamahl Mosley',p:['Paolo Banchero','Franz Wagner','Jalen Suggs']},
+  {n:'76人',a:'PHI',s:76,c:'Nick Nurse',p:['Joel Embiid','Tyrese Maxey','Paul George']},
+  {n:'热火',a:'MIA',s:74,c:'Erik Spoelstra',p:['Bam Adebayo','Tyler Herro','Terry Rozier']},
+  {n:'老鹰',a:'ATL',s:69,c:'Quin Snyder',p:['Trae Young','Jalen Johnson','Onyeka Okongwu']},
+  {n:'公牛',a:'CHI',s:64,c:'Billy Donovan',p:['Nikola Vučević','Coby White','Zach LaVine']},
+  {n:'篮网',a:'BKN',s:60,c:'Jordi Fernández',p:['Cam Thomas','Nic Claxton','Cameron Johnson']},
+  {n:'猛龙',a:'TOR',s:58,c:'Darko Rajaković',p:['Scottie Barnes','RJ Barrett','Immanuel Quickley']},
+  {n:'活塞',a:'DET',s:56,c:'J.B. Bickerstaff',p:['Cade Cunningham','Jaden Ivey','Jalen Duren']},
+  {n:'黄蜂',a:'CHA',s:54,c:'Charles Lee',p:['LaMelo Ball','Brandon Miller','Mark Williams']},
+  {n:'奇才',a:'WAS',s:48,c:'Brian Keefe',p:['Jordan Poole','Alex Sarr','Bilal Coulibaly']},
+  {n:'雷霆',a:'OKC',s:90,c:'Mark Daigneault',p:['Shai Gilgeous-Alexander','Jalen Williams','Chet Holmgren']},
+  {n:'掘金',a:'DEN',s:86,c:'Michael Malone',p:['Nikola Jokić','Jamal Murray','Aaron Gordon']},
+  {n:'独行侠',a:'DAL',s:84,c:'Jason Kidd',p:['Luka Dončić','Kyrie Irving','Klay Thompson']},
+  {n:'森林狼',a:'MIN',s:82,c:'Chris Finch',p:['Anthony Edwards','Rudy Gobert','Julius Randle']},
+  {n:'快船',a:'LAC',s:78,c:'Tyronn Lue',p:['Kawhi Leonard','James Harden','Ivica Zubac']},
+  {n:'湖人',a:'LAL',s:76,c:'JJ Redick',p:['LeBron James','Anthony Davis','Austin Reaves']},
+  {n:'太阳',a:'PHX',s:75,c:'Mike Budenholzer',p:['Devin Booker','Kevin Durant','Bradley Beal']},
+  {n:'火箭',a:'HOU',s:74,c:'Ime Udoka',p:['Alperen Şengün','Jalen Green','Amen Thompson']},
+  {n:'勇士',a:'GSW',s:73,c:'Steve Kerr',p:['Stephen Curry','Draymond Green','Andrew Wiggins']},
+  {n:'灰熊',a:'MEM',s:72,c:'Taylor Jenkins',p:['Ja Morant','Jaren Jackson Jr.','Desmond Bane']},
+  {n:'国王',a:'SAC',s:70,c:'Mike Brown',p:['De\'Aaron Fox','Domantas Sabonis','Keegan Murray']},
+  {n:'鹈鹕',a:'NOP',s:68,c:'Willie Green',p:['Zion Williamson','CJ McCollum','Herbert Jones']},
+  {n:'马刺',a:'SAS',s:62,c:'Gregg Popovich',p:['Victor Wembanyama','Jeremy Sochan','Keldon Johnson']},
+  {n:'爵士',a:'UTA',s:56,c:'Will Hardy',p:['Lauri Markkanen','Walker Kessler','Collin Sexton']},
+  {n:'开拓者',a:'POR',s:52,c:'Chauncey Billups',p:['Anfernee Simons','Scoot Henderson','Shaedon Sharpe']}
+];
+
+const COLLEGES=[
+  {n:'杜克大学',c:'Jon Scheyer'},{n:'肯塔基大学',c:'Mark Pope'},
+  {n:'堪萨斯大学',c:'Bill Self'},{n:'北卡罗来纳大学',c:'Hubert Davis'},
+  {n:'UCLA',c:'Mick Cronin'},{n:'冈萨加大学',c:'Mark Few'},
+  {n:'密歇根州立大学',c:'Tom Izzo'},{n:'亚利桑那大学',c:'Tommy Lloyd'},
+  {n:'维拉诺瓦大学',c:'Kyle Neptune'},{n:'贝勒大学',c:'Scott Drew'}
+];
+
+const AGENTS=['Rich Paul（Klutch Sports）','Jeff Schwartz（Excel Sports）','Mark Bartelstein（Priority Sports）','Bill Duffy（BDA Sports）'];
+const MEDIA=['Stephen A. Smith（ESPN）','Charles Barkley（TNT）','Shaquille O\'Neal（TNT）','Kendrick Perkins（ESPN）','Skip Bayless'];
+
+/* 经典模式 */
+const ERAS=[
+  {id:'1984',n:'1984 届',draft:['Hakeem Olajuwon','Michael Jordan','Charles Barkley','John Stockton','Sam Perkins'],
+   teams:[
+     {n:'湖人',a:'LAL',s:90,c:'Pat Riley',p:['Magic Johnson','Kareem Abdul-Jabbar','James Worthy']},
+     {n:'凯尔特人',a:'BOS',s:92,c:'K.C. Jones',p:['Larry Bird','Kevin McHale','Robert Parish']},
+     {n:'76人',a:'PHI',s:86,c:'Billy Cunningham',p:['Julius Erving','Moses Malone','Charles Barkley']},
+     {n:'活塞',a:'DET',s:80,c:'Chuck Daly',p:['Isiah Thomas','Bill Laimbeer','Kelly Tripucka']},
+     {n:'掘金',a:'DEN',s:76,c:'Doug Moe',p:['Alex English','Dan Issel','Kiki Vandeweghe']},
+     {n:'独行侠',a:'DAL',s:72,c:'Dick Motta',p:['Mark Aguirre','Rolando Blackman','Brad Davis']},
+     {n:'尼克斯',a:'NYK',s:70,c:'Hubie Brown',p:['Bernard King','Bill Cartwright','Rory Sparrow']},
+     {n:'雄鹿',a:'MIL',s:78,c:'Don Nelson',p:['Sidney Moncrief','Marques Johnson','Bob Lanier']},
+     {n:'老鹰',a:'ATL',s:74,c:'Mike Fratello',p:['Dominique Wilkins','Doc Rivers','Tree Rollins']},
+     {n:'爵士',a:'UTA',s:72,c:'Frank Layden',p:['Adrian Dantley','Darrell Griffith','Rickey Green']}
+   ]},
+  {id:'1996',n:'1996 届',draft:['Allen Iverson','Kobe Bryant','Ray Allen','Steve Nash','Jermaine O\'Neal'],
+   teams:[
+     {n:'公牛',a:'CHI',s:95,c:'Phil Jackson',p:['Michael Jordan','Scottie Pippen','Dennis Rodman']},
+     {n:'爵士',a:'UTA',s:88,c:'Jerry Sloan',p:['Karl Malone','John Stockton','Jeff Hornacek']},
+     {n:'湖人',a:'LAL',s:84,c:'Del Harris',p:['Shaquille O\'Neal','Eddie Jones','Nick Van Exel']},
+     {n:'火箭',a:'HOU',s:86,c:'Rudy Tomjanovich',p:['Hakeem Olajuwon','Clyde Drexler','Robert Horry']},
+     {n:'超音速',a:'SEA',s:87,c:'George Karl',p:['Gary Payton','Shawn Kemp','Detlef Schrempf']},
+     {n:'步行者',a:'IND',s:82,c:'Larry Brown',p:['Reggie Miller','Rik Smits','Mark Jackson']},
+     {n:'尼克斯',a:'NYK',s:82,c:'Jeff Van Gundy',p:['Patrick Ewing','John Starks','Charles Oakley']},
+     {n:'热火',a:'MIA',s:80,c:'Pat Riley',p:['Alonzo Mourning','Tim Hardaway','Jamal Mashburn']},
+     {n:'太阳',a:'PHX',s:78,c:'Cotton Fitzsimmons',p:['Charles Barkley','Kevin Johnson','Danny Manning']},
+     {n:'开拓者',a:'POR',s:74,c:'P.J. Carlesimo',p:['Clifford Robinson','Arvydas Sabonis','Isaiah Rider']}
+   ]},
+  {id:'2003',n:'2003 届',draft:['LeBron James','Carmelo Anthony','Dwyane Wade','Chris Bosh','David West'],
+   teams:[
+     {n:'湖人',a:'LAL',s:90,c:'Phil Jackson',p:['Shaquille O\'Neal','Kobe Bryant','Derek Fisher']},
+     {n:'马刺',a:'SAS',s:92,c:'Gregg Popovich',p:['Tim Duncan','Tony Parker','Manu Ginóbili']},
+     {n:'活塞',a:'DET',s:88,c:'Larry Brown',p:['Ben Wallace','Chauncey Billups','Richard Hamilton']},
+     {n:'篮网',a:'NJN',s:84,c:'Byron Scott',p:['Jason Kidd','Kenyon Martin','Richard Jefferson']},
+     {n:'独行侠',a:'DAL',s:86,c:'Don Nelson',p:['Dirk Nowitzki','Steve Nash','Michael Finley']},
+     {n:'国王',a:'SAC',s:85,c:'Rick Adelman',p:['Chris Webber','Peja Stojaković','Mike Bibby']},
+     {n:'步行者',a:'IND',s:82,c:'Rick Carlisle',p:['Jermaine O\'Neal','Reggie Miller','Ron Artest']},
+     {n:'森林狼',a:'MIN',s:84,c:'Flip Saunders',p:['Kevin Garnett','Latrell Sprewell','Sam Cassell']},
+     {n:'热火',a:'MIA',s:76,c:'Stan Van Gundy',p:['Dwyane Wade','Eddie Jones','Lamar Odom']},
+     {n:'超音速',a:'SEA',s:74,c:'Nate McMillan',p:['Ray Allen','Rashard Lewis','Brent Barry']}
+   ]},
+  {id:'2024',n:'2024-25 现役',draft:null,teams:null}
+];
+
+/* =========================================================
+   周计划池（每阶段选 5 个）
+   ========================================================= */
+const PLANS=[
+  {id:'shoot',n:'投篮特训',desc:'中投 / 三分',attrs:['midrange','three'],fat:12,kind:'train'},
+  {id:'drive',n:'突破特训',desc:'突破 / 控球',attrs:['drive','handle'],fat:13,kind:'train'},
+  {id:'pass',n:'传球与视野',desc:'传球 / 智商',attrs:['passing','bbiq'],fat:8,kind:'train'},
+  {id:'def',n:'防守特训',desc:'防守 / 抢断',attrs:['defense'],fat:11,kind:'train'},
+  {id:'reb',n:'篮板与力量',desc:'篮板 / 力量',attrs:['rebound','strength'],fat:13,kind:'train'},
+  {id:'ath',n:'体能与爆发',desc:'速度 / 弹跳',attrs:['speed','jump'],fat:14,kind:'train'},
+  {id:'free',n:'罚球练习',desc:'罚球',attrs:['freethrow'],fat:6,kind:'train'},
+  {id:'film',n:'录像分析',desc:'篮球智商',attrs:['bbiq'],fat:3,kind:'train',trust:2},
+  {id:'lead',n:'领导力培养',desc:'领导力 / 好胜心',attrs:['leadership','competitive'],fat:2,kind:'train',trust:1},
+  {id:'recover',n:'恢复休整',desc:'疲劳 -46，伤病 -1 周',fat:-46,kind:'rec'},
+  {id:'family',n:'陪伴家人',desc:'士气 +8，家人好感 +6',fat:-8,kind:'rec',morale:8,fam:6},
+  {id:'love',n:'陪伴恋人',desc:'士气 +9，恋人好感 +9',fat:-6,kind:'rec',morale:9,love:9},
+  {id:'fun',n:'娱乐放松',desc:'士气 +6，专注 -1',fat:-6,kind:'rec',morale:6,focus:-1},
+  {id:'brand',n:'品牌活动',desc:'金钱 +，名气 +，经纪好感 +',fat:10,kind:'biz'},
+  {id:'media',n:'媒体露面',desc:'名气 +，媒体好感 +',fat:4,kind:'biz'},
+  {id:'social',n:'球迷活动',desc:'名气 +，球迷好感 +',fat:5,kind:'biz'}
+];
+const PLAN=q=>PLANS.find(p=>p.id===q);
+
+/* 事件池（按阶段随机） */
+const EVENTS=[
+  {t:'教练单独找你谈话',d:'主教练把你叫进办公室：「我需要你在防守端更专注。」',o:[
+    {l:'接受角色，先做好防守',e:{def:2,trust:4,morale:2},r:'你放低姿态，防守端更积极了。'},
+    {l:'坚持自己的打法',e:{mid:2,morale:-3},r:'你坚持自我，得分更猛，但和教练有了隔阂。'}]},
+  {t:'媒体质疑',d:'一位评论员在节目里说：「他还差得远。」',o:[
+    {l:'公开回应',e:{rep:5,morale:4},r:'回应冲上热搜，球迷叫好。'},
+    {l:'用比赛说话',e:{morale:-1,comp:1},r:'你什么都没说，只是更早到了训练馆。'}]},
+  {t:'更衣室摩擦',d:'球队老将对你的出手选择不满。',o:[
+    {l:'请他吃饭',e:{morale:4,mate:5},r:'一顿饭化解了矛盾。'},
+    {l:'用表现回应',e:{mid:2,morale:-2},r:'你没多解释，下一场砍下高分。'}]},
+  {t:'商业邀约',d:'一家品牌想请你拍广告，但会占用训练时间。',o:[
+    {l:'接下',e:{money:1,rep:6,fat:6},r:'你的曝光度大增。'},
+    {l:'专注篮球',e:{bbiq:1,trust:1},r:'你婉拒了邀约。'}]},
+  {t:'膝伤预警',d:'训练后膝盖隐痛，队医建议休战。',o:[
+    {l:'听队医的',e:{injury:2,morale:-2},r:'你缺席两周，但避免了恶化。'},
+    {l:'坚持上场',e:{injury:4,morale:5,rep:2},r:'你带伤作战，赢得尊重。'}]},
+  {t:'交易流言',d:'有消息称球队考虑交易你。',o:[
+    {l:'公开表忠心',e:{morale:4,trust:3},r:'管理层和球迷都安心了。'},
+    {l:'不予回应',e:{morale:-2},r:'你不想被流言左右。'}]},
+  {t:'深夜加练',d:'凌晨一点，训练馆只剩你一个人。',o:[
+    {l:'练到虚脱',e:{mid:2,fat:12},r:'手感更细了，但身体在抗议。'},
+    {l:'见好就收',e:{fat:-6,morale:2},r:'你懂得取舍。'}]},
+  {t:'球迷来信',d:'一个孩子在信里说你是他的偶像。',o:[
+    {l:'回信',e:{morale:5,rep:2},r:'你认真回了信，心里暖暖的。'},
+    {l:'交给俱乐部处理',e:{},r:'你很忙，事情就这样过去了。'}]},
+  {t:'投篮教练的加练',d:'球队投篮教练问你要不要加练一组接球投。',o:[
+    {l:'练一组',e:{three:2,fat:6},r:'你的三分手感更稳了。'},
+    {l:'今天算了',e:{morale:1},r:'你选择了休息。'}]},
+  {t:'力量房',d:'体能师安排了新的力量计划。',o:[
+    {l:'认真完成',e:{strength:2,fat:8},r:'力量明显提升。'},
+    {l:'减量完成',e:{strength:1,fat:3},r:'你保守地完成了训练。'}]},
+  {t:'录像室',d:'助教邀请你一起研究对手的防守习惯。',o:[
+    {l:'看两个小时',e:{bbiq:2,passing:1,fat:2},r:'你对防守轮转的理解更深了。'},
+    {l:'只看了十分钟',e:{bbiq:1},r:'聊胜于无。'}]},
+  {t:'社区活动',d:'球队安排你去社区教孩子打球。',o:[
+    {l:'认真参与',e:{rep:4,morale:4},r:'孩子们的笑容让你想起初心。'},
+    {l:'露个面就走',e:{rep:1},r:'走流程。'}]},
+  {t:'队友的请求',d:'一位队友想让你在下一场多给他传球。',o:[
+    {l:'答应他',e:{mate:8,passing:1},r:'他感激地拍了拍你的背。'},
+    {l:'按自己节奏打',e:{mate:-4,mid:1},r:'他没说什么，但脸色不好看。'}]},
+  {t:'赞助商晚宴',d:'品牌方邀请你参加一场高规格晚宴。',o:[
+    {l:'出席',e:{rep:5,fat:7,money:1},r:'你认识了几个商界人士。'},
+    {l:'推掉去训练',e:{trust:3,bbiq:1},r:'教练看在眼里。'}]},
+  {t:'国家队邀请',d:'国家队向你发出了集训邀请。',o:[
+    {l:'接受',e:{comp:2,rep:4,fat:10},r:'你在国际赛场积累了经验。'},
+    {l:'婉拒，专注俱乐部',e:{trust:3,fat:-4},r:'教练理解你的选择。'}]}
+];
+
+/* 真实球员台词（按公众形象的性格写） */
+const VOICES={
+  'Draymond Green':['防守！不防守就别想赢球。','别在场上发呆，动起来！'],
+  'Stephen Curry':['多跑动，球会找到你的。','别急，节奏在我们手里。'],
+  'LeBron James':['保持专注，比赛还长。','多看多学，你会明白的。'],
+  'Jimmy Butler':['训练馆见，别迟到。','我不在乎数据，我只在乎赢。'],
+  'Giannis Antetokounmpo':['继续练，别停下来。','每一天都要比昨天强。'],
+  'Trae Young':['把球给我，我来解决。','别怕出手，投就完了。'],
+  'Anthony Edwards':['兄弟，放开打！','这球我来！'],
+  'Nikola Jokić':['传球，传球就好了。','别想太多，打球而已。'],
+  'Luka Dončić':['我看到了空位，跟我走。','慢慢来，有机会的。'],
+  'Joel Embiid':['内线是我的地盘。','给我球，我背打他。'],
+  'Jayson Tatum':['保持耐心，机会会来。','我们要打得像一支球队。'],
+  'Kawhi Leonard':['做好你的工作。','……（他点了点头）'],
+  'Damian Lillard':['时间还够，稳住。','关键时刻交给我。'],
+  'Jaylen Brown':['别犹豫，打你的球。','我们得打得更凶。'],
+  'Jalen Brunson':['一步一步来。','别放弃任何一个回合。'],
+  'Devin Booker':['投进就是了。','保持节奏。'],
+  'Kevin Durant':['你得靠自己。','练，一直练。'],
+  'Bam Adebayo':['防守先立起来。','我们是一个整体。'],
+  'Tyrese Haliburton':['跑起来，我传给你。','这球太漂亮了！'],
+  'Victor Wembanyama':['我会继续进步。','每一场都在学习。'],
+  'Michael Jordan':['我可以接受失败，但不能接受放弃。','你还没准备好赢。'],
+  'Kobe Bryant':['凌晨四点，训练馆见。','第二名意味着你是头号输家。'],
+  'Magic Johnson':['让每个人都参与进来。','相信队友。'],
+  'Larry Bird':['我就在这儿投。','你还差得远。'],
+  'Tim Duncan':['做好基本功。','保持稳定。'],
+  'Shaquille O\'Neal':['进去，扣它。','禁区是我的。'],
+  'Kareem Abdul-Jabbar':['天勾，练一万次。','耐心是最好的武器。'],
+  'Isiah Thomas':['我们不会输。','跟着我。'],
+  'Dominique Wilkins':['看我扣一个。','这就叫篮球。'],
+  'Patrick Ewing':['内线要强硬。','别让他们在禁区得分。'],
+  'Karl Malone':['每天都要训练。','身体是本钱。'],
+  'John Stockton':['传球比得分更重要。','简单的事情重复做。'],
+  'Reggie Miller':['最后一投交给我。','这就是我们的时刻。'],
+  'Dirk Nowitzki':['保持手感，别急。','金鸡独立，练它一千次。'],
+  'Jason Kidd':['看清楚场上的每个人。','传球之前先观察。'],
+  'Allen Iverson':['把球给我，我带你们赢。','训练？我们谈的是比赛。'],
+  'Gary Payton':['防守是我的名片。','别想从我这儿过去。']
+};
+
+const COACH_VOICES={
+  'Gregg Popovich':['你得多动脑子，篮球不是光靠身体。','团队，永远是团队。'],
+  'Steve Kerr':['跑起来，分享球。','相信你的队友。'],
+  'Erik Spoelstra':['细节决定成败。','每一天都要变得更好。'],
+  'Phil Jackson':['保持平静，节奏由我们掌控。','信任体系。'],
+  'Pat Riley':['强硬，是唯一的语言。','没有借口。'],
+  'Rick Carlisle':['执行战术，别自作主张。','比赛是四十八分钟的事。'],
+  'Tom Thibodeau':['防守！每一回合都要防守！','别松懈。'],
+  'Nick Nurse':['打得更聪明一点。','注意轮转。'],
+  'Tyronn Lue':['找到错位，然后攻击它。','保持侵略性。'],
+  'Michael Malone':['我们要更团结。','每一个回合都算数。'],
+  'Mark Daigneault':['相信过程。','防守带动进攻。'],
+  'Joe Mazzulla':['下一个回合。','别想太多，执行。'],
+  'Jason Kidd':['看到空位就传。','控制节奏。'],
+  'JJ Redick':['空间！我们要空间。','把球动起来。'],
+  'Ime Udoka':['强硬一点。','防守赢得比赛。'],
+  'Billy Donovan':['保持专注。','我们还有机会。'],
+  'Quin Snyder':['细节。','执行。'],
+  'Charles Lee':['打得聪明些。','别急。'],
+  'Brian Keefe':['每一天都在学习。','继续努力。'],
+  'Jordi Fernández':['我们能做到。','相信彼此。'],
+  'Darko Rajaković':['耐心，耐心。','团队优先。'],
+  'Chris Finch':['冲击篮筐。','保持侵略性。'],
+  'Taylor Jenkins':['防守是根基。','我们打自己的篮球。'],
+  'Willie Green':['别慌。','一步一步来。'],
+  'Will Hardy':['按体系打。','保持纪律。'],
+  'Chauncey Billups':['关键球要冷静。','做正确的选择。'],
+  'Mike Budenholzer':['空间，投射，转移球。','保持节奏。']
+};
+
+function makeTalkEvent(){
+  const coach=G.npcs.find(n=>n.role==='主教练'||n.role==='大学主帅');
+  const mates=G.npcs.filter(n=>n.role==='队友');
+  const useCoach=Math.random()<0.4&&coach;
+
+  if(useCoach){
+    const lines=COACH_VOICES[coach.name]||['你还有进步空间。','专注眼前的事。'];
+    return{
+      t:`${coach.name} 的提醒`,
+      d:`${coach.name} 把你叫到一边：「${pick(lines)}」`,
+      o:[
+        {l:'虚心接受',e:{trust:5,morale:2},r:`${coach.name} 点了点头，对你多了一分信任。`},
+        {l:'说出自己的想法',e:{trust:-2,morale:3},r:'他皱了皱眉，但没打断你。'}
+      ]
+    };
+  }
+  if(!mates.length)return null;
+  const mate=pick(mates);
+  const v=VOICES[mate.name];
+  const line=pick(v||['好好打，兄弟。','别想太多，专注比赛。']);
+  return{
+    t:`${mate.name} 找你聊天`,
+    d:`${mate.name} 看着你：「${line}」`,
+    o:[
+      {l:'认真回应',e:{mate:7,morale:3},r:`${mate.name} 拍了拍你的肩膀。`},
+      {l:'敷衍过去',e:{mate:-3},r:'他耸耸肩，走开了。'}
+    ]
+  };
+}
+
+/* =========================================================
+   开局天赋
+   ========================================================= */
+const TALENTS=[
+  {id:'shooter',n:'天生射手',d:'三分 +7',ef:{three:7}},
+  {id:'ironman',n:'铁人',d:'伤病抗性 +12',ef:{injuryResist:12}},
+  {id:'leader',n:'领袖气质',d:'领导力 +9',ef:{leadership:9}},
+  {id:'clutch',n:'大心脏',d:'抗压 +9',ef:{composure:9}},
+  {id:'freak',n:'野兽体格',d:'力量 +6，弹跳 +4',ef:{strength:6,jump:4}},
+  {id:'lightning',n:'快如闪电',d:'速度 +8',ef:{speed:8}},
+  {id:'vision',n:'球场视野',d:'传球 +6，篮球智商 +5',ef:{passing:6,bbiq:5}},
+  {id:'grinder',n:'训练狂',d:'训练效果 +20%',ef:{},special:'train'},
+  {id:'motor',n:'永不疲倦',d:'耐力 +9',ef:{stamina:9}},
+  {id:'hands',n:'抢断嗅觉',d:'防守 +6',ef:{defense:6}},
+  {id:'reboundking',n:'篮板嗅觉',d:'篮板 +7',ef:{rebound:7}},
+  {id:'biggame',n:'大场面球员',d:'抗压 +5，好胜心 +5',ef:{composure:5,competitive:5}}
+];
+
+let TALENT_POOL=null;
+
+function rollTalents(){
+  TALENT_POOL=[...TALENTS].sort(()=>Math.random()-0.5).slice(0,3);
+  P.talent=null;
+  renderTalents();
+}
+function renderTalents(){
+  const el=document.getElementById('c-talent');
+  if(!el)return;
+  if(!TALENT_POOL){
+    el.innerHTML='<span style="color:var(--dim);font-size:12px">点下方按钮抽取</span>';
+    return;
+  }
+  el.innerHTML=TALENT_POOL.map(t=>
+    `<button class="chip ${P.talent===t.id?'on':''}" onclick="pickTalent('${t.id}')">${t.n} · ${t.d}</button>`
+  ).join('');
+}
+function pickTalent(id){P.talent=id;renderTalents();}
+
+/* =========================================================
+   状态
+   ========================================================= */
+let G=null;
+let P={name:'林风',pos:'SF',desc:'',mode:'2024',parsed:null};
+let TAB='overview';
+
+/* =========================================================
+   创建
+   ========================================================= */
+function renderCreate(){
+  document.getElementById('c-pos').innerHTML=POSITIONS.map(k=>
+    `<button class="chip ${P.pos===k?'on':''}" onclick="setPos('${k}')">${k}</button>`).join('');
+  document.getElementById('c-mode').innerHTML=ERAS.map(e=>
+    `<button class="chip ${P.mode===e.id?'on':''}" onclick="setMode('${e.id}')">${e.n}</button>`).join('');
+  const hEl=document.getElementById('c-height');
+  if(!hEl.dataset||!hEl.dataset.init){
+    if(!hEl.dataset)hEl.dataset={};
+    hEl.dataset.init='1';
+    setPhysDefaults(P.pos);
+  }else updatePhys();
+  if(P.parsed)renderPreview();
+  renderTalents();
+}
+function setPos(k){
+  P.pos=k;P.parsed=null;
+  setPhysDefaults(k);
+  renderCreate();
+}
+function setMode(m){P.mode=m;P.parsed=null;renderCreate();}
+
+function setPhysDefaults(pos){
+  const d=POS_PHYS[pos];
+  document.getElementById('c-height').value=d.h;
+  document.getElementById('c-weight').value=d.w;
+  document.getElementById('c-wingspan').value=d.ws;
+  updatePhys();
+}
+
+function updatePhys(){
+  const h=+document.getElementById('c-height').value;
+  const w=+document.getElementById('c-weight').value;
+  const ws=+document.getElementById('c-wingspan').value;
+  document.getElementById('v-height').textContent=h+' cm';
+  document.getElementById('v-weight').textContent=w+' kg';
+  document.getElementById('v-wing').textContent=ws+' cm';
+  renderCombine();
+}
+
+function renderCombine(){
+  const h=+document.getElementById('c-height').value||201;
+  const w=+document.getElementById('c-weight').value||100;
+  const ws=+document.getElementById('c-wingspan').value||211;
+  const c=calcCombine(h,w,ws,P.parsed?P.parsed.attrs:null,P.parsed?P.parsed.w:null);
+  document.getElementById('c-combine').innerHTML=`
+    <div><b>${c.reach}</b><small>站立摸高 cm</small></div>
+    <div><b>${c.vert}</b><small>垂直弹跳 cm</small></div>
+    <div><b>${c.sprint}</b><small>3/4 冲刺 s</small></div>
+    <div><b>${c.agility}</b><small>折返跑 s</small></div>
+    <div><b>${c.bench}</b><small>卧推 185lb</small></div>`;
+}
+
+function renderPreview(){
+  const {attrs,tpl,dist}=P.parsed;
+  const top=ALLKEYS.map(k=>({k,v:attrs[k].v})).sort((a,b)=>b.v-a.v).slice(0,5);
+  let h=`<b>模板：${tpl.n}</b><br>
+    <span style="color:var(--dim);font-size:12px">对照：${tpl.refs.join(' / ')}</span>
+    <div class="pb">`;
+  top.forEach(o=>{
+    h+=`<div class="row"><span>${META[o.k].n}</span>
+      <div class="bar"><i style="width:${o.v}%"></i></div><b style="width:26px;text-align:right">${o.v}</b></div>`;
+  });
+  h+=`</div>
+    <div style="margin-top:9px;font-size:12px">
+      <span style="color:var(--green)">上限：</span>${tpl.ceil}<br>
+      <span style="color:var(--red)">下限：</span>${tpl.floor}
+    </div>`;
+  document.getElementById('c-preview').innerHTML=h;
+}
+
+function parseDesc(){
+  const d=(document.getElementById('c-desc').value||'').trim();
+  P.desc=d;
+  P.parsed=buildFromDesc(d,P.pos);
+  renderPreview();
+  renderCombine();
+}
+
+/* =========================================================
+   开局
+   ========================================================= */
+function startCareer(){
+  const name=(document.getElementById('c-name').value||'').trim()||'无名球员';
+  if(!P.parsed)parseDesc();
+  const src=P.parsed;
+  const height=+document.getElementById('c-height').value||POS_PHYS[P.pos].h;
+  const weight=+document.getElementById('c-weight').value||POS_PHYS[P.pos].w;
+  const wingspan=+document.getElementById('c-wingspan').value||POS_PHYS[P.pos].ws;
+  const attrs={};
+  ALLKEYS.forEach(k=>attrs[k]={v:src.attrs[k].v,pot:src.attrs[k].pot});
+  applyPhys(attrs,height,weight,wingspan,P.pos);
+  // 天赋加成
+  const talent=TALENTS.find(t=>t.id===P.talent);
+  if(talent){
+    Object.keys(talent.ef||{}).forEach(k=>{
+      if(attrs[k])attrs[k].v=clamp(attrs[k].v+talent.ef[k],30,99);
+    });
+  }
+  const combine=calcCombine(height,weight,wingspan,attrs,P.parsed.w||null);
+
+  const college=pick(COLLEGES);
+  const era=ERAS.find(e=>e.id===P.mode)||ERAS[3];
+
+  G={
+    mode:P.mode,
+    player:{name,pos:P.pos,age:18,attrs,
+      height,weight,wingspan,combine,
+      talent:talent?{n:talent.n,d:talent.d,id:talent.id}:null,
+      fatigue:0,morale:70,focus:72,injury:{weeks:0,type:null},
+      tpl:src.tpl.id,tplName:src.tpl.n,tplRefs:src.tpl.refs,tplCeil:src.tpl.ceil,tplFloor:src.tpl.floor},
+    college, collegeYear:1, collegeBlocks:0,
+    team:null,pickNo:null,
+    phase:'college',
+    block:1,totalBlocks:4,
+    season:0,
+    coachTrust:50,tacticalRole:50,rep:30,
+    contract:null,
+    record:{w:0,l:0},
+    seasonTotals:zeroT(),careerTotals:zeroT(),
+    honors:[],history:[],log:[],tradeHistory:[],
+    selected:[],blockGames:[],
+    npcs:[{id:'collegeCoach',name:college.c,role:'大学主帅',like:50,trust:50}],
+    lover:null,loverSeen:false,
+    money:5,
+    draftStock:60,
+    declared:false,
+    era:era.id
+  };
+  addLog(`🏀 ${name} 进入 ${college.n}，身高位置 ${P.pos}。`,'gold');
+  addLog(`打法模板：${src.tpl.n}（${src.tpl.refs.join(' / ')}）。`);
+  document.getElementById('create').classList.add('hidden');
+  document.getElementById('game').classList.remove('hidden');
+  TAB='overview';
+  startBlock();
+}
+
+function zeroT(){return{gp:0,pts:0,reb:0,ast:0,stl:0,blk:0,to:0,fgm:0,fga:0};}
+function addLog(text,type=''){G.log.unshift({text,type,s:G.season||G.collegeYear});if(G.log.length>160)G.log.pop();}
+
+/* =========================================================
+   关系 NPC
+   ========================================================= */
+function genMateStats(ovr){
+  return{
+    pts:+(ovr*0.25+rnd(-4,6)).toFixed(1),
+    reb:+(ovr*0.09+rnd(-2,3)).toFixed(1),
+    ast:+(ovr*0.07+rnd(-2,3)).toFixed(1)
+  };
+}
+
+function buildNBA_NPCs(team){
+  const coachOrigin=[
+    `训练营第一天，${team.c} 把你叫进录像室，聊了十分钟球队体系。`,
+    `${team.n}的赛季前会议上，${team.c} 第一个点了你的名字。`,
+    `你第一次走进 ${team.n} 的训练馆，${team.c} 站在场边看了你很久。`
+  ];
+  const mateOrigin=[
+    n=>`球队合练第一天，${n} 主动过来和你击掌。`,
+    n=>`季前赛的飞机上，${n} 正好坐在你旁边。`,
+    n=>`第一次队内对抗，${n} 在低位背打你，然后笑着说「欢迎来到 NBA」。`
+  ];
+  G.npcs=[
+    {id:'coach',name:team.c,role:'主教练',like:50,trust:45,origin:pick(coachOrigin)},
+    ...team.p.map((n,i)=>{
+      const ovr=rnd(72,94);
+      return{id:'mate'+i,name:n,role:'队友',like:50,trust:50,ovr,
+        stats:genMateStats(ovr),origin:pick(mateOrigin)(n)};
+    }),
+    {id:'agent',name:pick(AGENTS),role:'经纪人',like:50,trust:50,
+     origin:'你的大学教练把这位经纪人介绍给了你，他在联盟里带过不少新秀。'},
+    {id:'media',name:pick(MEDIA),role:'媒体',like:45,trust:45,
+     origin:'新秀赛季的第一场赛后采访，他坐在第一排，问了第一个问题。'},
+    {id:'fans',name:'球迷群体',role:'球迷',like:55,trust:55,
+     origin:'选秀夜那天，${team.n} 的球迷在社交媒体上讨论了你的名字。'.replace('\${team.n}',team.n)}
+  ];
+}
+
+function npc(id){return G.npcs.find(n=>n.id===id);}
+function bump(id,like=0,trust=0){
+  const n=npc(id);if(!n)return;
+  n.like=clamp(n.like+like,0,100);
+  n.trust=clamp(n.trust+trust,0,100);
+}
+
+/* =========================================================
+   阶段（3 周一结算）
+   ========================================================= */
+function isCollege(){return G.phase==='college';}
+
+function startBlock(){
+  G.selected=[];
+  G.blockGames=[];
+  const cnt=isCollege()?rnd(8,12):rnd(10,14);
+  for(let i=0;i<cnt;i++){
+    const opp=isCollege()
+      ? {n:pick(COLLEGES.filter(c=>c.n!==G.college.n)).n,s:rnd(55,75)}
+      : pick(TEAMS.filter(t=>t.a!==(G.team?G.team.a:'')));
+    G.blockGames.push({opp,home:Math.random()<0.5});
+  }
+  TAB=TAB||'overview';
+  render();
+}
+
+function togglePlan(id){
+  const i=G.selected.indexOf(id);
+  if(i>=0){G.selected.splice(i,1);}
+  else{
+    if(G.selected.length>=5)return;
+    if(id==='love'&&!G.lover)return;
+    G.selected.push(id);
+  }
+  render();
+}
+
+function ageFactor(age){
+  if(age<=19)return 1.8;
+  if(age<=22)return 1.4;
+  if(age<=26)return 1.0;
+  if(age<=30)return 0.5;
+  return 0.15;
+}
+function potFactor(p,k){
+  const at=p.attrs[k];
+  return Math.max(0,1-(at.v-45)/Math.max(1,at.pot-45));
+}
+function trainGain(k){
+  const p=G.player;
+  const disc=0.85+p.attrs.discipline.v/300;
+  let g=0.9*ageFactor(p.age)*potFactor(p,k)*disc*rand(.8,1.2);
+  if(p.fatigue>85)g*=0.7;
+  return g;
+}
+
+/* =========================================================
+   比赛
+   ========================================================= */
+function simGame(opp,home){
+  const p=G.player;
+  const ov=overall(p);
+  const injured=p.injury.weeks>0;
+  let min=injured?0:clamp(20+(G.coachTrust-50)*0.34+(p.morale-50)*0.07+rand(-3,5),0,37);
+  if(p.fatigue>=95)min=Math.round(min*0.55);
+
+  const usage=clamp(0.21+(G.tacticalRole-50)*0.003+(G.coachTrust-50)*0.001,0.12,0.42);
+  const m=min/36;
+  const fatPen=p.fatigue/100*0.04;
+  const defPre=(opp.s-70)*0.0012;
+  const a=k=>p.attrs[k].v;
+
+  const threeShare=clamp(0.14+(a('three')-60)*0.006+(p.pos==='SG'?0.12:0)+(p.pos==='SF'?0.06:0),0.05,0.62);
+  const shots=min>0?Math.max(1,Math.round(m*100*usage)):0;
+  const threeShots=Math.round(shots*threeShare);
+  const midShots=shots-threeShots;
+  const threePct=clamp(0.33+(a('three')-60)*0.0036-defPre-fatPen,0.18,0.58);
+  const midPct=clamp(0.40+(a('midrange')-60)*0.0036-defPre-fatPen,0.24,0.64);
+  const threeHit=Math.round(threeShots*threePct*rand(.87,1.13));
+  const midHit=Math.round(midShots*midPct*rand(.87,1.13));
+  let pts=threeHit*3+midHit*2;
+
+  const ftRate=clamp(0.12+(a('drive')-60)*0.003+(a('strength')-60)*0.002,0.05,0.40);
+  const fta=Math.round(shots*ftRate*rand(.7,1.3));
+  const ftPct=clamp(0.64+(a('freethrow')-60)*0.004,0.40,0.96);
+  const ftm=Math.round(fta*ftPct);
+  pts+=ftm;
+
+  const pw=POSW[p.pos];
+  const reb=min>0?Math.round(m*(a('rebound')/100)*14*pw.reb*rand(.72,1.32)):0;
+  const ast=min>0?Math.round(m*(a('passing')/100)*12*pw.ast*(0.7+a('bbiq')/300)*rand(.68,1.32)):0;
+  const stl=min>0?Math.round(m*(a('defense')/100)*2.2*rand(.5,1.6)):0;
+  const blk=min>0?Math.round(m*(a('defense')/100)*1.7*(p.pos==='C'||p.pos==='PF'?1.2:0.5)*rand(.4,1.6)):0;
+  const to=min>0?Math.round(m*rand(.6,2.2)*(1.15-(a('handle')+a('bbiq'))/300)*2):0;
+
+  const teamS=G.team?G.team.s:(G.college?rnd(60,72):60);
+  const teamR=teamS+(ov-60)*0.5+(home?2:0);
+  const oppR=opp.s+rand(-5,5)+(home?-2:0);
+  const win=(teamR+rand(-6,6))>(oppR+rand(-6,6));
+  const margin=(teamR-oppR)*0.35+rand(-6,8);
+  let myScore=Math.round(106+margin),oppScore=Math.round(105+rand(-6,8)-margin*0.3);
+  if(win&&myScore<=oppScore)myScore=oppScore+1+rnd(0,3);
+  if(!win&&myScore>=oppScore)oppScore=myScore+1+rnd(0,3);
+
+  return{min,pts,reb,ast,stl,blk,to,fgm:threeHit+midHit,fga:shots+fta,
+    win,opp,myScore,oppScore,home};
+}
+
+function gradeFor(g){
+  if(g.min===0)return '—';
+  const v=g.pts+g.reb*0.8+g.ast*1.1+g.stl*1.5+g.blk*1.3-g.to*1.2;
+  if(v>=45)return 'S';if(v>=30)return 'A';if(v>=18)return 'B';return 'C';
+}
+
+/* =========================================================
+   阶段结算
+   ========================================================= */
+function endBlock(){
+  const p=G.player;
+  const report={train:[],games:[],events:[]};
+
+  G.selected.forEach(id=>{
+    const pl=PLAN(id);
+    if(!pl)return;
+    if(pl.kind==='train'){
+      pl.attrs.forEach(k=>{
+        const before=p.attrs[k].v;
+        p.attrs[k].v=clamp(p.attrs[k].v+trainGain(k),1,99);
+        const d=p.attrs[k].v-before;
+        if(d>0.01)report.train.push(`${META[k].n}+${f1(d)}`);
+      });
+      p.fatigue=clamp(p.fatigue+pl.fat,0,100);
+      if(pl.trust)G.coachTrust=clamp(G.coachTrust+pl.trust,0,100);
+    }else if(pl.kind==='rec'){
+      p.fatigue=clamp(p.fatigue+pl.fat,0,100);
+      if(pl.morale)p.morale=clamp(p.morale+pl.morale,10,100);
+      if(pl.focus)p.focus=clamp(p.focus+pl.focus,10,100);
+      if(pl.fat<=-20&&p.injury.weeks>0)p.injury.weeks=Math.max(0,p.injury.weeks-1);
+      if(pl.love&&G.lover)G.lover.affection=clamp(G.lover.affection+pl.love,0,100);
+      if(pl.fam)bump('family',pl.fam,0);
+    }else if(pl.kind==='biz'){
+      p.fatigue=clamp(p.fatigue+pl.fat,0,100);
+      if(id==='brand'){G.money+=rnd(15,45);G.rep=clamp(G.rep+2,0,100);bump('agent',3,2);}
+      if(id==='media'){G.rep=clamp(G.rep+4,0,100);bump('media',4,2);}
+      if(id==='social'){G.rep=clamp(G.rep+3,0,100);bump('fans',5,2);}
+    }
+  });
+
+  p.fatigue=clamp(p.fatigue+4,0,100);
+
+  G.blockGames.forEach(gm=>{
+    const r=simGame(gm.opp,gm.home);
+    r.grade=gradeFor(r);
+    report.games.push(r);
+    G.record[r.win?'w':'l']++;
+    ['gp','pts','reb','ast','stl','blk','to','fgm','fga'].forEach(k=>{
+      const v=k==='gp'?1:r[k];
+      G.seasonTotals[k]+=v;G.careerTotals[k]+=v;
+    });
+    if(r.min>0){
+      p.fatigue=clamp(p.fatigue+rnd(3,6),0,100);
+      p.morale=clamp(p.morale+(r.win?1:-1)+(r.pts>=25?2:0),10,100);
+      G.coachTrust=clamp(G.coachTrust+(r.pts>=22?1:r.pts<=6&&r.min>12?-1:0),0,100);
+      const injRate=0.011*(1+p.fatigue/100)*clamp(1.5-p.attrs.injuryResist.v/100,0.5,1.5);
+      if(Math.random()<injRate){
+        const weeks=rnd(1,3);
+        p.injury={weeks,type:'扭伤'};
+        report.events.push(`🚑 受伤，缺阵 ${weeks} 周`);
+        addLog(`🚑 受伤，缺阵 ${weeks} 周。`,'red');
+      }
+      if(r.pts>=40)addLog(`🔥 单场 ${r.pts} 分！`,'gold');
+      if(r.pts>=10&&r.reb>=10&&r.ast>=10)addLog(`📊 三双：${r.pts}/${r.reb}/${r.ast}`,'blue');
+    }
+  });
+
+  // 本段最佳表现
+  const best=report.games.filter(g=>g.min>0).sort((a,b)=>b.pts-a.pts)[0];
+  if(best){
+    addLog(`📊 本段最佳：${best.pts}分 ${best.reb}板 ${best.ast}助 · ${best.win?'胜':'负'} ${best.opp.n}`,'blue');
+  }
+  if(report.train.length){
+    const uniq=[...new Set(report.train)].slice(0,4);
+    addLog(`💪 训练提升：${uniq.join('、')}`);
+  }
+
+  // 交易（赛季中段概率更高）
+  if(G.phase==='nba'&&G.team){
+    const deadline=(G.block===3||G.block===4);
+    if(Math.random()<(deadline?0.22:0.05)){
+      const msg=doTrade();
+      if(msg)report.events.push(msg);
+    }
+    // 队友数据小幅波动
+    G.npcs.filter(n=>n.role==='队友'&&n.stats).forEach(n=>{
+      n.stats.pts=clamp(+(n.stats.pts+rand(-1.2,1.2)).toFixed(1),5,38);
+      n.stats.reb=clamp(+(n.stats.reb+rand(-0.6,0.6)).toFixed(1),1,15);
+      n.stats.ast=clamp(+(n.stats.ast+rand(-0.6,0.6)).toFixed(1),0,12);
+    });
+  }
+
+  // 恋人
+  if(G.lover&&!G.selected.includes('love')){
+    G.lover.affection=clamp(G.lover.affection-5,0,100);
+    if(G.lover.affection<25&&!G.lover.broken){
+      G.lover.broken=true;G.lover=null;
+      addLog('💔 你们分手了。','red');
+      report.events.push('💔 分手了。');
+    }
+  }
+  if(!G.lover&&!G.loverSeen&&(isCollege()||G.block>=2)&&Math.random()<0.45){
+    G.loverSeen=true;
+    G.lover={name:pick(['苏晴','陈亦然','Mia','周雨桐','Alex']),
+      type:pick(['大学同学','娱乐圈','商界','同行','网红']),
+      affection:60,stage:'交往',broken:false};
+    addLog(`💘 认识了 ${G.lover.name}（${G.lover.type}）。`,'love');
+    report.events.push(`💘 新恋情：${G.lover.name}`);
+  }
+  if(G.lover)advanceLover(report);
+
+  // 事件：每阶段 1-2 个
+  const evCount=rnd(2,3);
+  for(let i=0;i<evCount;i++){
+    let ev=null;
+    if(Math.random()<0.5)ev=makeTalkEvent();
+    if(!ev)ev=pick(EVENTS);
+    const choice=pick(ev.o);
+    applyEv(choice.e);
+    report.events.push(`📌 ${ev.t}：${choice.l} —— ${choice.r}`);
+    addLog(`📌 ${ev.t}：${choice.l}`,'blue');
+  }
+
+  G.block++;
+  if(G.block>G.totalBlocks){
+    if(isCollege())endCollegeYear(report);else endSeason(report);
+    return;
+  }
+  showBlockReport(report);
+}
+
+function doTrade(){
+  const newTeam=pick(TEAMS.filter(t=>t.a!==G.team.a));
+  const old=G.team.n;
+  G.team=newTeam;
+  G.coachTrust=clamp(45+rnd(-8,8),20,70);
+  buildNBA_NPCs(newTeam);
+  G.npcs.push({id:'family',name:'家人',role:'家人',like:70,trust:80,
+    origin:'从小到大，他们一直在你身后。'});
+  const msg=`🔄 交易！${old} → ${newTeam.n}`;
+  G.tradeHistory=G.tradeHistory||[];
+  G.tradeHistory.push(`S${G.season}：${old} → ${newTeam.n}`);
+  addLog(msg,'gold');
+  return msg;
+}
+
+function applyEv(e){
+  if(!e)return;
+  const p=G.player;
+  const alias={def:'defense',mid:'midrange',comp:'composure'};
+  // 属性加成（支持任意属性键）
+  Object.keys(e).forEach(k=>{
+    const key=alias[k]||k;
+    if(META[key]&&p.attrs[key]){
+      p.attrs[key].v=clamp(p.attrs[key].v+e[k],1,99);
+    }
+  });
+  if(e.morale)p.morale=clamp(p.morale+e.morale,10,100);
+  if(e.rep)G.rep=clamp(G.rep+e.rep,0,100);
+  if(e.fat)p.fatigue=clamp(p.fatigue+e.fat,0,100);
+  if(e.injury)p.injury={weeks:e.injury,type:'伤病'};
+  if(e.money)G.money+=rnd(20,60);
+  if(e.trust)G.coachTrust=clamp(G.coachTrust+e.trust,0,100);
+  if(e.mate&&G.npcs){
+    const m=G.npcs.find(n=>n.role==='队友');
+    if(m)m.like=clamp(m.like+e.mate,0,100);
+  }
+}
+
+function advanceLover(report){
+  const L=G.lover;
+  if(L.affection>=90&&L.stage==='交往'){L.stage='同居';report.events.push('🏠 你们开始同居');}
+  else if(L.affection>=95&&L.stage==='同居'){L.stage='订婚';report.events.push('💍 求婚成功');}
+  else if(L.stage==='订婚'&&G.honors.some(h=>h.t==='总冠军')){L.stage='结婚';report.events.push('💒 你们结婚了');}
+}
+
+/* =========================================================
+   大学阶段
+   ========================================================= */
+function endCollegeYear(report){
+  const p=G.player;
+  const t=G.seasonTotals,gp=t.gp||1;
+  const avg=t.pts/gp;
+  addLog(`🎓 大${G.collegeYear}赛季结束，场均 ${f1(avg)} 分。`,'green');
+
+  // 选秀行情
+  G.draftStock=clamp(Math.round(50+avg*1.2+overall(p)*0.5),20,99);
+
+  G.history.push({season:'大一'.replace('一',['一','二','三','四'][G.collegeYear-1]),
+    team:G.college.n,age:p.age,gp:t.gp,pts:+avg.toFixed(1),
+    reb:+(t.reb/gp).toFixed(1),ast:+(t.ast/gp).toFixed(1),
+    record:`${G.record.w}-${G.record.l}`});
+
+  G.seasonTotals=zeroT();G.record={w:0,l:0};
+  G.collegeYear++;
+  p.age++;
+  // 成长
+  const growth=1.8;
+  ALLKEYS.forEach(k=>{
+    let d=growth+rand(-0.8,1.0);
+    if(p.attrs[k].v>=p.attrs[k].pot+4)d=Math.min(d,0);
+    p.attrs[k].v=clamp(p.attrs[k].v+d,25,99);
+  });
+
+  if(G.collegeYear>4||(G.collegeYear>1&&Math.random()<0.25&&avg>18)){
+    // 参选
+    declareDraft();
+  }else{
+    G.totalBlocks=4;G.block=1;
+    showCollegeReport();
+  }
+}
+
+function showCollegeReport(){
+  const p=G.player;
+  document.getElementById('m-title').textContent=`大学第 ${G.collegeYear} 年`;
+  document.getElementById('m-body').innerHTML=`
+    <p>${G.college.n} · 大${['一','二','三','四'][G.collegeYear-1]}赛季开始。</p>
+    <p style="font-size:12px;color:var(--dim)">当前选秀行情：<b style="color:var(--accent2)">${G.draftStock}/99</b></p>
+    <p style="font-size:12px;color:var(--dim)">综合 ${overall(p)} · 年龄 ${p.age}</p>`;
+  document.getElementById('m-opts').innerHTML=`
+    <button class="btn primary" onclick="closeModal();startBlock()">继续打大学</button>
+    <button class="btn ghost" onclick="closeModal();G.declared=true;declareDraft()">提前参选 2025 选秀</button>`;
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+function closeModal(){document.getElementById('modal').classList.add('hidden');}
+
+/* =========================================================
+   选秀
+   ========================================================= */
+function declareDraft(){
+  const p=G.player;
+  const ov=overall(p);
+  const stock=G.draftStock||60;
+  const pickNo=clamp(Math.round(31-(stock-35)*0.35-rnd(0,4)),1,30);
+
+  let team;
+  if(G.era!=='2024'){
+    const era=ERAS.find(e=>e.id===G.era);
+    team=pick(era.teams);
+  }else{
+    const sorted=[...TEAMS].sort((a,b)=>a.s-b.s);
+    team=sorted[clamp(Math.round((pickNo-1)*0.85+rnd(-2,2)),0,29)];
+  }
+
+  G.team=team;G.pickNo=pickNo;
+  G.phase='nba';
+  G.season=1;G.seasonTotals=zeroT();G.record={w:0,l:0};
+  G.contract={yrs:3,sal:Math.max(200,Math.round(1000-pickNo*22))};
+  G.coachTrust=45;G.tacticalRole=50;G.rep=Math.max(G.rep,38);
+  buildNBA_NPCs(team);
+  // 家人 / 恋人保留
+  G.npcs.push({id:'family',name:'家人',role:'家人',like:70,trust:80});
+
+  addLog(`🏀 2025 选秀第 ${pickNo} 顺位被 ${team.n} 选中。`,'gold');
+
+  document.getElementById('m-title').textContent='选秀夜';
+  document.getElementById('m-body').innerHTML=`
+    <p style="font-size:15px">第 <b style="color:var(--accent2)">${pickNo}</b> 顺位</p>
+    <p><b>${team.n}</b><br><span style="color:var(--dim);font-size:12px">主教练：${team.c}</span></p>
+    <p style="font-size:12px;color:var(--dim)">新秀合同 3 年，年薪 ${G.contract.sal} 万美元。</p>`;
+  document.getElementById('m-opts').innerHTML=`<button class="btn primary" onclick="closeModal();startNBASeason()">进入新秀赛季 →</button>`;
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+function startNBASeason(){
+  G.phase='nba';G.block=1;G.totalBlocks=6;
+  addLog(`🔔 第 ${G.season} 赛季开始，${G.team.n} 集结完毕。`,'blue');
+  startBlock();
+}
+
+/* =========================================================
+   NBA 赛季结束
+   ========================================================= */
+function endSeason(report){
+  const t=G.seasonTotals,gp=t.gp||1;
+  const avgPts=t.pts/gp;
+  const wpct=G.record.w/(G.record.w+G.record.l||1);
+  addLog(`📅 赛季结束：${G.record.w}胜${G.record.l}负，场均 ${f1(avgPts)} 分。`,'green');
+
+  if(gp>=25&&((avgPts>=20&&wpct>0.4)||avgPts>=24)){
+    G.honors.push({s:G.season,t:'全明星'});
+    addLog('⭐ 入选全明星！','gold');G.rep=clamp(G.rep+8,0,100);
+  }
+  if(G.season===1&&avgPts>=15){
+    G.honors.push({s:G.season,t:'最佳新秀'});
+    addLog('🌟 年度最佳新秀！','gold');
+  }
+  if(avgPts>=26&&wpct>=0.6&&Math.random()<0.5){
+    G.honors.push({s:G.season,t:'MVP'});
+    addLog('👑 常规赛 MVP！','gold');
+  }
+
+  let champ=false;
+  if(wpct>=0.48){
+    let st=G.team.s+(overall(G.player)-60)*0.5;
+    const rounds=['首轮','半决赛','分区决赛','总决赛'];
+    for(let i=0;i<4;i++){
+      const os=76+i*6+rnd(-6,6);
+      let w=0,l=0;
+      while(w<4&&l<4){(st+rnd(-11,11))>(os+rnd(-11,11))?w++:l++;}
+      if(w===4)st+=2;else break;
+      if(i===3)champ=true;
+    }
+  }
+  if(champ){
+    G.honors.push({s:G.season,t:'总冠军'});
+    addLog('🏆 夺得总冠军！','gold');
+    if(avgPts>=20){G.honors.push({s:G.season,t:'FMVP'});addLog('👑 总决赛 MVP！','gold');}
+  }
+
+  G.history.push({season:'S'+G.season,team:G.team.n,age:G.player.age,gp:t.gp,
+    pts:+avgPts.toFixed(1),reb:+(t.reb/gp).toFixed(1),ast:+(t.ast/gp).toFixed(1),
+    record:`${G.record.w}-${G.record.l}`});
+
+  G.phase='offseason';
+  G.seasonTotals=zeroT();G.record={w:0,l:0};
+  showOffseason();
+}
+
+function showOffseason(){
+  const p=G.player;
+  let h=`<p>第 ${G.season} 赛季结束。休赛期：</p>`;
+
+  // 代言
+  const bos=brandOffer();
+  h+=`<div style="margin:11px 0;padding:12px;background:var(--panel2);border-radius:10px">
+    <div style="font-size:11px;color:var(--dim);margin-bottom:5px">代言机会</div>
+    <div style="font-size:13px">${bos?`${bos.n} 报价 <b>${bos.pay}</b> 万美元/年`:'暂无品牌找你'}</div>
+  </div>`;
+
+  h+=`<div style="margin:11px 0;padding:12px;background:var(--panel2);border-radius:10px">
+    <div style="font-size:11px;color:var(--dim);margin-bottom:5px">资产</div>
+    <div style="font-size:13px">${G.money} 万美元</div>
+  </div>`;
+
+  // 恋人
+  if(G.lover){
+    h+=`<div style="margin:11px 0;padding:12px;background:var(--panel2);border-radius:10px">
+      <div style="font-size:11px;color:var(--dim);margin-bottom:5px">恋人 · ${G.lover.name}</div>
+      <div style="font-size:13px">${G.lover.stage} · 好感 ${G.lover.affection}</div>
+    </div>`;
+  }
+
+  document.getElementById('m-title').textContent='休赛期';
+  document.getElementById('m-body').innerHTML=h;
+  document.getElementById('m-opts').innerHTML=`
+    ${bos?`<button class="btn" onclick="signBrand(${bos.pay},'${bos.n}')">签下代言：${bos.n}</button>`:''}
+    <button class="btn" onclick="invest('safe')">保守理财</button>
+    <button class="btn" onclick="invest('risky')">激进投资</button>
+    <button class="btn primary" onclick="nextSeason()">进入第 ${G.season+1} 赛季 →</button>`;
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+function brandOffer(){
+  const tiers=[
+    {n:'本地体育用品店',min:0,pay:[8,20]},
+    {n:'运动饮料品牌',min:40,pay:[30,90]},
+    {n:'中国运动品牌（安踏/李宁级别）',min:55,pay:[100,300]},
+    {n:'国际运动品牌（Nike/Adidas 级别）',min:70,pay:[350,900]},
+    {n:'顶级全球品牌',min:85,pay:[1000,2200]}
+  ];
+  const t=tiers.filter(x=>G.rep>=x.min).slice(-1)[0];
+  if(!t)return null;
+  return {n:t.n,pay:rnd(t.pay[0],t.pay[1])};
+}
+
+function signBrand(pay,name){
+  G.money+=pay;
+  G.rep=clamp(G.rep+4,0,100);
+  bump('agent',5,3);
+  addLog(`💰 签下 ${name}，${pay} 万美元。`,'gold');
+  showOffseason();
+}
+
+function invest(type){
+  if(type==='safe'){
+    const g=Math.round(G.money*rand(0.04,0.1));
+    G.money+=g;addLog(`📈 保守理财收益 ${g} 万。`,'green');
+  }else{
+    if(Math.random()<0.45){
+      const l=Math.round(G.money*rand(0.25,0.6));
+      G.money-=l;addLog(`📉 激进投资亏损 ${l} 万。`,'red');
+    }else{
+      const g=Math.round(G.money*rand(0.5,1.5));
+      G.money+=g;addLog(`📈 激进投资大赚 ${g} 万。`,'gold');
+    }
+  }
+  showOffseason();
+}
+
+function nextSeason(){
+  closeModal();
+  const p=G.player;
+  p.age++;
+  const growth=p.age<=23?2.2:p.age<=27?1.2:p.age<=30?0.45:-0.95;
+  ALLKEYS.forEach(k=>{
+    let d=growth+rand(-0.8,1.0);
+    if(k==='composure'||k==='leadership'||k==='competitive')d=Math.max(0,d*0.5);
+    if(p.attrs[k].v>=p.attrs[k].pot+4)d=Math.min(d,0);
+    p.attrs[k].v=clamp(p.attrs[k].v+d,25,99);
+  });
+
+  G.contract.yrs--;
+  if(G.contract.yrs<=0){
+    const avg=G.careerTotals.gp?G.careerTotals.pts/G.careerTotals.gp:12;
+    G.contract={yrs:3,sal:Math.round(clamp(avg*95+G.rep*20,300,6000))};
+    addLog(`📝 新合同：3 年 / 年薪 ${G.contract.sal} 万美元。`,'green');
+  }
+
+  G.season++;G.phase='nba';G.block=1;G.totalBlocks=6;
+  startBlock();
+  addLog(`🔔 第 ${G.season} 赛季开始。`,'blue');
+
+  if(p.age>=38||(p.age>=34&&overall(p)<60))setTimeout(showRetire,300);
+}
+
+function showRetire(){
+  document.getElementById('m-title').textContent='退役抉择';
+  document.getElementById('m-body').innerHTML=`<p>你 ${G.player.age} 岁，综合 ${overall(G.player)}。是时候考虑退役了。</p>`;
+  document.getElementById('m-opts').innerHTML=`
+    <button class="btn primary" onclick="closeModal()">再战一年</button>
+    <button class="btn ghost" onclick="retire()">宣布退役</button>`;
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+function retire(){
+  const t=G.careerTotals;
+  let score=Math.min(40,t.pts/500);
+  G.honors.forEach(h=>{
+    if(h.t==='MVP')score+=15;if(h.t==='总冠军')score+=10;
+    if(h.t==='FMVP')score+=8;if(h.t==='全明星')score+=3;
+  });
+  score=Math.round(score);
+  const v=score>=70?'🏛️ 入选名人堂！':score>=50?'你的名字会被球迷记住。':'一段平凡但真实的旅程。';
+  document.getElementById('m-title').textContent='生涯谢幕';
+  document.getElementById('m-body').innerHTML=`<p>${G.player.name} 的职业生涯结束。</p>
+    <p style="font-size:15px;color:var(--accent2);margin-top:9px">${v}</p>
+    <p style="margin-top:7px">总得分 ${fmt(t.pts)} · ${G.history.length} 个赛季 · 名人堂评分 ${score}</p>`;
+  document.getElementById('m-opts').innerHTML=`<button class="btn primary" onclick="restart()">开启新生涯 ↺</button>`;
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+/* =========================================================
+   阶段报告
+   ========================================================= */
+function showBlockReport(r){
+  document.getElementById('m-title').textContent=`阶段 ${G.block-1} 报告`;
+  const w=r.games.filter(x=>x.win).length,l=r.games.length-w;
+  let h=`<div style="margin-bottom:10px"><b style="font-size:15px">${w} 胜 ${l} 负</b></div>`;
+  const best=r.games.slice().sort((a,b)=>b.pts-a.pts)[0];
+  if(best&&best.min>0){
+    h+=`<div class="game-row"><div class="vs">
+      <b>最佳表现：${best.win?'胜':'负'} ${best.opp.n||best.opp.n}</b>
+      <div class="ls"><span><b>${best.pts}</b>分</span><span><b>${best.reb}</b>板</span>
+      <span><b>${best.ast}</b>助</span></div></div>
+      <div class="score">${best.myScore}-${best.oppScore}</div></div>`;
+  }
+  if(r.train.length){
+    h+=`<div style="margin-top:10px;font-size:11.5px;color:var(--dim)">训练：${[...new Set(r.train)].slice(0,6).join('、')}</div>`;
+  }
+  if(r.events.length){
+    h+=`<div style="margin-top:8px">${r.events.map(e=>`<div class="tag">${e}</div>`).join('')}</div>`;
+  }
+  const p=G.player;
+  h+=`<div style="margin-top:10px;font-size:11.5px;color:var(--dim)">
+    疲劳 ${Math.round(p.fatigue)} · 士气 ${Math.round(p.morale)} · 教练信任 ${Math.round(G.coachTrust)}
+    ${G.lover?` · 恋人 ${G.lover.stage} ${G.lover.affection}`:''}</div>`;
+  document.getElementById('m-body').innerHTML=h;
+  document.getElementById('m-opts').innerHTML=`<button class="btn primary" onclick="closeModal();startBlock()">进入阶段 ${G.block} →</button>`;
+  document.getElementById('modal').classList.remove('hidden');
+}
+
+/* =========================================================
+   渲染
+   ========================================================= */
+function render(){
+  if(!G)return;
+  const p=G.player;
+  document.getElementById('g-avatar').textContent=p.name[0]||'球';
+  document.getElementById('g-name').textContent=p.name;
+  document.getElementById('g-team').textContent=G.team?`${G.team.n} · ${p.pos} · #${G.pickNo}`
+    :`${G.college.n} · 大${['一','二','三','四'][G.collegeYear-1]||'四'} · ${p.pos}`;
+  document.getElementById('g-block').textContent=G.block;
+  document.getElementById('g-age').textContent=p.age;
+  document.getElementById('g-ovr').textContent=overall(p);
+  document.getElementById('g-record').textContent=`${G.record.w}-${G.record.l}`;
+  document.getElementById('g-salary').textContent=G.contract?`${G.contract.sal}万`:'—';
+
+  document.getElementById('tabs').innerHTML=[
+    ['overview','概览'],['attrs','属性'],['team','球队'],['relations','关系'],['life','生活'],['stats','数据']
+  ].map(([k,n])=>`<button class="tab ${TAB===k?'on':''}" onclick="setTab('${k}')">${n}</button>`).join('');
+
+  const v=document.getElementById('view');
+  if(TAB==='overview')v.innerHTML=viewOverview();
+  else if(TAB==='attrs')v.innerHTML=viewAttrs();
+  else if(TAB==='team')v.innerHTML=viewTeam();
+  else if(TAB==='relations')v.innerHTML=viewRelations();
+  else if(TAB==='life')v.innerHTML=viewLife();
+  else v.innerHTML=viewStats();
+}
+
+function setTab(t){TAB=t;render();}
+
+function viewOverview(){
+  const p=G.player;
+  const left=5-G.selected.length;
+  let h=`<div class="grid2">`;
+
+  // 左：阶段操作
+  h+=`<div>
+    <div class="card">
+      <div class="card-title">当前阶段 · 第 ${G.block} / ${G.totalBlocks} 段（每段 3 周）</div>
+      <div style="font-size:12px;color:var(--dim);margin-bottom:10px">
+        ${G.phase==='college'?`${G.college.n} · 大${['一','二','三','四'][G.collegeYear-1]||'四'}赛季`:`${G.team.n} · 第 ${G.season} 赛季`}
+        <br>本段 ${G.blockGames.length} 场 · 已选 ${G.selected.length}/5 项计划
+      </div>
+      <div class="plan-grid">`;
+  const groups=[
+    {n:'训练',ids:PLANS.filter(p=>p.kind==='train').map(p=>p.id)},
+    {n:'生活与恢复',ids:PLANS.filter(p=>p.kind==='rec').map(p=>p.id)},
+    {n:'商业与曝光',ids:PLANS.filter(p=>p.kind==='biz').map(p=>p.id)}
+  ];
+  groups.forEach(grp=>{
+    h+=`<div style="grid-column:1/-1;font-size:10.5px;color:var(--dim);letter-spacing:.1em;
+      margin-top:6px;font-weight:700">${grp.n}</div>`;
+    grp.ids.forEach(id=>{
+      const pl=PLAN(id);
+      const on=G.selected.includes(pl.id);
+      const dis=(!on&&left<=0)||(pl.id==='love'&&!G.lover);
+      h+=`<button class="plan ${on?'on':''}" onclick="togglePlan('${pl.id}')" ${dis?'disabled':''}>
+        ${on?'<span class="tick">✓</span>':''}
+        <b>${pl.n}</b><small>${pl.desc}</small></button>`;
+    });
+  });
+  h+=`</div>
+    <div style="display:flex;gap:9px;justify-content:flex-end;margin-top:12px">
+      <button class="btn primary" onclick="endBlock()">结算这 3 周 ▶</button>
+    </div></div>`;
+
+  h+=`<div class="card"><div class="card-title">生涯日志</div>
+    <div class="log">${G.log.slice(0,30).map(l=>
+      `<div class="log-item ${l.type}"><span class="lt">S${l.s}</span><span class="lx">${l.text}</span></div>`
+    ).join('')}</div></div></div>`;
+
+  // 右：状态
+  h+=`<div>
+    <div class="card">
+      <div class="card-title">模板</div>
+      <div style="font-size:13px;font-weight:700;color:var(--accent2)">${p.tplName||'—'}</div>
+      <div style="font-size:11.5px;color:var(--dim);margin-top:3px">对照：${(p.tplRefs||[]).join(' / ')}</div>
+      <div style="font-size:11.5px;margin-top:8px"><span style="color:var(--green)">上限：</span>${p.tplCeil||'—'}</div>
+      <div style="font-size:11.5px;margin-top:4px"><span style="color:var(--red)">下限：</span>${p.tplFloor||'—'}</div>
+      ${p.talent?`<div style="font-size:11.5px;margin-top:9px;padding-top:9px;border-top:1px solid var(--line)">
+        <span style="color:var(--purple)">天赋：</span>${p.talent.n}<br>
+        <span style="color:var(--dim);font-size:10.5px">${p.talent.d}</span></div>`:''}
+    </div>
+    <div class="card">
+      <div class="card-title">状态</div>
+      <div class="status-row"><span>疲劳</span><b>${Math.round(p.fatigue)}</b></div>
+      <div class="status-row"><span>士气</span><b>${Math.round(p.morale)}</b></div>
+      <div class="status-row"><span>专注</span><b>${Math.round(p.focus)}</b></div>
+      <div class="status-row"><span>伤病</span><b>${p.injury.weeks>0?'缺阵 '+p.injury.weeks+' 周':'健康'}</b></div>
+      <div class="status-row"><span>教练信任</span><b>${Math.round(G.coachTrust)}</b></div>
+      <div class="status-row"><span>名气</span><b>${Math.round(G.rep)}</b></div>
+      <div class="status-row"><span>资产</span><b>${G.money} 万</b></div>
+      ${G.lover?`<div class="status-row"><span>恋人</span><b>${G.lover.name} · ${G.lover.stage}</b></div>`:''}
+      ${p.fatigue>80?`<div style="color:var(--red);font-size:11px;margin-top:8px;line-height:1.5">
+        ⚠️ 疲劳过高：命中率下降、伤病风险上升。建议多选「恢复休整」。</div>`:''}
+    </div>
+    <div class="card">
+      <div class="card-title">赛季场均</div>
+      ${avgGridHTML()}
+    </div>
+  </div></div>`;
+  return h;
+}
+
+function avgGridHTML(totals){
+  const t=totals||G.seasonTotals,gp=t.gp||0;
+  const av=k=>gp?f1(t[k]/gp):'0.0';
+  return `<div class="stat-grid">
+    <div><b>${av('pts')}</b><small>得分</small></div>
+    <div><b>${av('reb')}</b><small>篮板</small></div>
+    <div><b>${av('ast')}</b><small>助攻</small></div>
+    <div><b>${av('stl')}</b><small>抢断</small></div>
+    <div><b>${av('blk')}</b><small>盖帽</small></div>
+    <div><b>${gp}</b><small>出场</small></div></div>`;
+}
+
+function viewAttrs(){
+  const p=G.player;
+  let h=`<div class="grid2"><div class="card"><div class="card-title">属性</div>`;
+  GROUPS.forEach(gp=>{
+    h+=`<div class="group-title">${gp.n}</div>`;
+    gp.keys.forEach(k=>{
+      const at=p.attrs[k],v=at.v;
+      const color=v>=85?'var(--purple)':v>=75?'var(--blue)':v>=60?'var(--accent)':'var(--red)';
+      h+=`<div class="attr"><span class="an">${META[k].n}</span>
+        <div class="bar"><i style="width:${v}%;background:${color}"></i></div><b>${Math.round(v)}</b></div>`;
+    });
+  });
+  h+=`</div><div>
+    <div class="card"><div class="card-title">模板对照</div>
+      <div style="font-size:14px;font-weight:700;color:var(--accent2)">${p.tplName}</div>
+      <div style="font-size:12px;color:var(--dim);margin-top:4px">${(p.tplRefs||[]).join(' / ')}</div>
+      <div style="margin-top:12px;font-size:12px"><span style="color:var(--green)">上限：</span>${p.tplCeil}</div>
+      <div style="margin-top:6px;font-size:12px"><span style="color:var(--red)">下限：</span>${p.tplFloor}</div>
+    </div>
+    <div class="card"><div class="card-title">身体与体测</div>
+      <div class="status-row"><span>身高</span><b>${p.height||'—'} cm</b></div>
+      <div class="status-row"><span>体重</span><b>${p.weight||'—'} kg</b></div>
+      <div class="status-row"><span>臂展</span><b>${p.wingspan||'—'} cm</b></div>
+      ${(()=>{
+        const c=p.combine||calcCombine(p.height||201,p.weight||100,p.wingspan||211,p.attrs);
+        return `<div class="combine" style="margin-top:10px">
+          <div><b>${c.reach}</b><small>站立摸高</small></div>
+          <div><b>${c.vert}</b><small>垂直弹跳</small></div>
+          <div><b>${c.sprint}</b><small>3/4 冲刺</small></div>
+          <div><b>${c.agility}</b><small>折返跑</small></div>
+          <div><b>${c.bench}</b><small>卧推</small></div>
+        </div>`;
+      })()}
+    </div>
+    <div class="card"><div class="card-title">潜力</div>`;
+  ALLKEYS.forEach(k=>{
+    const at=p.attrs[k];
+    const pct=clamp((at.v-20)/80*100,0,100);
+    const potPct=clamp((at.pot-20)/80*100,0,100);
+    h+=`<div class="attr"><span class="an">${META[k].n}</span>
+      <div class="bar"><i style="width:${pct}%;background:var(--accent)"></i></div>
+      <b style="font-size:10.5px">${Math.round(at.v)}/${at.pot}</b></div>`;
+  });
+  h+=`</div></div></div>`;
+  return h;
+}
+
+function viewTeam(){
+  const p=G.player;
+  if(!G.team)return `<div class="card"><div class="card-title">球队</div>
+    <div style="color:var(--dim);font-size:12px">你还在大学，进入 NBA 后这里会显示球队名单和数据。</div></div>`;
+
+  const t=G.seasonTotals,gp=t.gp||0;
+  let h=`<div class="card"><div class="card-title">${G.team.n} · 第 ${G.season} 赛季</div>
+    <div class="status-row"><span>战绩</span><b>${G.record.w}-${G.record.l}</b></div>
+    <div class="status-row"><span>主教练</span><b>${G.team.c}</b></div>
+    <div class="status-row"><span>球队实力</span><b>${G.team.s}</b></div>
+    <div class="status-row"><span>你的角色</span><b>${G.tacticalRole>=65?'核心':G.tacticalRole>=50?'主力':'轮换'}</b></div>
+  </div>`;
+
+  h+=`<div class="card"><div class="card-title">球队数据</div>
+    <div style="overflow-x:auto"><table>
+    <tr><th>球员</th><th>评分</th><th>得分</th><th>篮板</th><th>助攻</th></tr>
+    <tr style="background:rgba(255,107,44,.08)">
+      <td><b>${p.name}</b>（你）</td><td>${overall(p)}</td>
+      <td>${gp?f1(t.pts/gp):'0.0'}</td><td>${gp?f1(t.reb/gp):'0.0'}</td><td>${gp?f1(t.ast/gp):'0.0'}</td>
+    </tr>
+    ${G.npcs.filter(n=>n.role==='队友').map(n=>`
+      <tr><td>${n.name}</td><td>${n.ovr||'—'}</td>
+      <td>${n.stats?n.stats.pts:'—'}</td><td>${n.stats?n.stats.reb:'—'}</td><td>${n.stats?n.stats.ast:'—'}</td></tr>`).join('')}
+    </table></div>
+    <div style="font-size:11px;color:var(--dim);margin-top:9px">队友数据每阶段会小幅波动。</div>
+  </div>`;
+
+  h+=`<div class="card"><div class="card-title">交易记录</div>
+    ${(G.tradeHistory||[]).length
+      ?G.tradeHistory.map(x=>`<div class="tag">${x}</div>`).join('')
+      :'<div style="color:var(--dim);font-size:12px">暂无交易。每赛季中段是交易截止日。</div>'}
+  </div>`;
+  return h;
+}
+
+function viewRelations(){
+  let h=`<div class="card"><div class="card-title">人际关系</div>`;
+  G.npcs.forEach(n=>{
+    const ico=n.role==='主教练'||n.role==='大学主帅'?'👔':n.role==='队友'?'🏀':
+      n.role==='经纪人'?'💼':n.role==='媒体'?'🎙️':n.role==='家人'?'🏠':'👥';
+    h+=`<div class="npc"><div class="ico">${ico}</div>
+      <div class="info"><b>${n.name}</b><small>${n.role}</small>${n.origin?'<small style="display:block;color:#5b6b84;margin-top:2px;font-size:10px">'+n.origin+'</small>':''}</div>
+      <div class="meter">
+        <div class="row"><span>好感</span><span>${Math.round(n.like)}</span></div>
+        <div class="bar"><i style="width:${n.like}%;background:var(--accent)"></i></div>
+        <div class="row"><span>信任</span><span>${Math.round(n.trust)}</span></div>
+        <div class="bar"><i style="width:${n.trust}%;background:var(--blue)"></i></div>
+      </div></div>`;
+  });
+  h+=`</div>`;
+  if(G.lover){
+    const L=G.lover;
+    h+=`<div class="card"><div class="card-title">恋人</div>
+      <div class="npc"><div class="ico">💕</div>
+      <div class="info"><b>${L.name}</b><small>${L.type} · ${L.stage}</small></div>
+      <div class="meter">
+        <div class="row"><span>好感</span><span>${L.affection}</span></div>
+        <div class="bar"><i style="width:${L.affection}%;background:var(--purple)"></i></div>
+      </div></div></div>`;
+  }else{
+    h+=`<div class="card"><div class="card-title">恋人</div>
+      <div style="color:var(--dim);font-size:12px">目前单身。大学阶段和进入联盟后都可能遇到。</div></div>`;
+  }
+  return h;
+}
+
+function viewLife(){
+  const p=G.player;
+  let h=`<div class="grid2"><div class="card"><div class="card-title">生活状态</div>
+    <div class="status-row"><span>疲劳</span><b>${Math.round(p.fatigue)}/100</b></div>
+    <div class="status-row"><span>士气</span><b>${Math.round(p.morale)}/100</b></div>
+    <div class="status-row"><span>专注</span><b>${Math.round(p.focus)}/100</b></div>
+    <div class="status-row"><span>资产</span><b>${G.money} 万美元</b></div>
+    <div style="font-size:11.5px;color:var(--dim);margin-top:10px;line-height:1.6">
+      每 3 周结算一次。计划和事件都会影响这些数值。<br>
+      疲劳超过 80 会降低命中率并提高伤病率。
+    </div></div>`;
+
+  h+=`<div class="card"><div class="card-title">历史赛季</div>
+    <div style="overflow-x:auto"><table>
+      <tr><th>赛季</th><th>球队</th><th>年龄</th><th>出场</th><th>得分</th><th>篮板</th><th>助攻</th></tr>
+      ${G.history.map(x=>`<tr><td>${x.season}</td><td>${x.team}</td><td>${x.age}</td>
+        <td>${x.gp}</td><td>${x.pts}</td><td>${x.reb}</td><td>${x.ast}</td></tr>`).join('')}
+    </table></div></div></div>`;
+  return h;
+}
+
+function viewStats(){
+  const t=G.careerTotals,gp=t.gp||0;
+  let h=`<div class="grid2"><div class="card"><div class="card-title">生涯总计</div>
+    ${avgGridHTML(G.careerTotals)}
+    <div style="margin-top:12px;font-size:12px;color:var(--dim)">生涯场均 ${
+      gp?f1(t.pts/gp):'0.0'} 分 · 总得分 ${fmt(t.pts)}</div>
+  </div><div class="card"><div class="card-title">荣誉</div>
+    ${G.honors.length?G.honors.map(h=>`<span class="tag">S${h.s} ${h.t}</span>`).join(''):'<span style="color:var(--dim)">暂无</span>'}
+  </div></div>`;
+  h+=`<div class="card"><div class="card-title">赛季记录</div>
+    <div style="overflow-x:auto"><table>
+      <tr><th>赛季</th><th>球队</th><th>年龄</th><th>出场</th><th>得分</th><th>篮板</th><th>助攻</th><th>战绩</th></tr>
+      ${G.history.map(x=>`<tr><td>${x.season}</td><td>${x.team}</td><td>${x.age}</td>
+        <td>${x.gp}</td><td>${x.pts}</td><td>${x.reb}</td><td>${x.ast}</td><td>${x.record||''}</td></tr>`).join('')}
+    </table></div></div>`;
+  return h;
+}
+
+/* =========================================================
+   存档
+   ========================================================= */
+function saveGame(){
+  try{localStorage.setItem('nba-v5-save',JSON.stringify(G));addLog('💾 已保存。');render();}
+  catch(e){alert('保存失败');}
+}
+function restart(){
+  if(!confirm('确定重开？'))return;
+  localStorage.removeItem('nba-v5-save');
+  G=null;
+  document.getElementById('game').classList.add('hidden');
+  document.getElementById('create').classList.remove('hidden');
+  closeModal();P.parsed=null;renderCreate();
+}
+function loadSave(){
+  try{
+    const raw=localStorage.getItem('nba-v5-save');
+    if(!raw)return;
+    G=JSON.parse(raw);
+    document.getElementById('create').classList.add('hidden');
+    document.getElementById('game').classList.remove('hidden');
+    if(!G.blockGames||!G.blockGames.length)startBlock();else render();
+  }catch(e){alert('读取失败');}
+}
+
+/* =========================================================
+   启动
+   ========================================================= */
+renderCreate();
+(function(){
+  const raw=localStorage.getItem('nba-v5-save');
+  if(raw){
+    const bar=document.createElement('div');
+    bar.style.cssText='position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:50';
+    bar.innerHTML=`<button class="btn primary" onclick="loadSave()">继续上次生涯 ▶</button>`;
+    document.body.appendChild(bar);
+  }
+})();
+</script>
+</body>
+</html>
